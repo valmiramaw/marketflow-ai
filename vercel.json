@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/sync-ads",
+      "schedule": "0 6 * * *"
+    },
+    {
       "path": "/api/cron/sync-seo",
       "schedule": "0 7 * * *"
     }
