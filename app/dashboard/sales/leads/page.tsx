@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +36,7 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 }
 
 export default function LeadsPage() {
+  const router = useRouter()
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
@@ -192,7 +194,7 @@ export default function LeadsPage() {
                   filtered.map((lead) => {
                     const st = statusLabels[lead.status] || statusLabels.new
                     return (
-                      <tr key={lead.id} className="border-b border-border/50 hover:bg-muted/50 cursor-pointer">
+                      <tr key={lead.id} className="border-b border-border/50 hover:bg-muted/50 cursor-pointer" onClick={() => router.push(`/dashboard/sales/leads/${lead.id}`)}>
                         <td className="p-4">
                           <p className="font-medium">{lead.company}</p>
                           {lead.email && <p className="text-xs text-muted-foreground">{lead.email}</p>}

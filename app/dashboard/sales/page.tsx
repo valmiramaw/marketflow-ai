@@ -1,97 +1,187 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { KpiCard } from '../components/kpi-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Users, DollarSign, TrendingUp, Target } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Loader2, Users, DollarSign, TrendingUp, Target, CheckCircle, Clock } from 'lucide-react'
 
-const pipelineStages = [
-  { name: 'Neu', count: 8, value: '€24.000', color: 'bg-blue-500' },
-  { name: 'Kontaktiert', count: 6, value: '€38.000', color: 'bg-yellow-500' },
-  { name: 'Qualifiziert', count: 5, value: '€42.500', color: 'bg-orange-500' },
-  { name: 'Proposal', count: 3, value: '€28.000', color: 'bg-purple-500' },
-  { name: 'Gewonnen', count: 1, value: '€16.000', color: 'bg-green-500' },
-]
+interface Lead {
+  id: string
+  company: string
+  contactName: string | null
+  status: string
+  score: number | null
+  value: number | null
+}
+
+interface FollowUp {
+  id: string
+  type: string
+  subject: string
+  dueDate: string
+  completed: boolean
+  lead: { id: string; company: string; contactName: string | null }
+}
 
 export default function SalesPage() {
+  const router = useRouter()
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [followUps, setFollowUps] = useState<FollowUp[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/sales/leads').then((r) => r.ok ? r.json() : []),
+      fetch('/api/sales/follow-ups?pending=true').then((r) => r.ok ? r.json() : []),
+    ]).then(([l, f]) => {
+      setLeads(l)
+      setFollowUps(f)
+    }).finally(() => setLoading(false))
+  }, [])
+
+  const totalValue = leads.reduce((s, l) => s + (l.value || 0), 0)
+  const openLeads = leads.filter((l) => !['won', 'lost'].includes(l.status)).length
+  const wonLeads = leads.filter((l) => l.status === 'won').length
+  const winRate = leads.length > 0 ? Math.round((wonLeads / leads.length) * 100) : 0
+  const avgDeal = wonLeads > 0
+    ? leads.filter((l) => l.status === 'won').reduce((s, l) => s + (l.value || 0), 0) / wonLeads
+    : 0
+
+  const topLeads = [...leads]
+    .filter((l) => l.score !== null && !['won', 'lost'].includes(l.status))
+    .sort((a, b) => (b.score || 0) - (a.score || 0))
+    .slice(0, 5)
+
+  const pipelineStages = [
+    { name: 'Neu', status: 'new', color: 'bg-blue-500' },
+    { name: 'Kontaktiert', status: 'contacted', color: 'bg-yellow-500' },
+    { name: 'Qualifiziert', status: 'qualified', color: 'bg-orange-500' },
+    { name: 'Proposal', status: 'proposal', color: 'bg-purple-500' },
+    { name: 'Gewonnen', status: 'won', color: 'bg-green-500' },
+  ].map((s) => ({
+    ...s,
+    count: leads.filter((l) => l.status === s.status).length,
+    value: leads.filter((l) => l.status === s.status).reduce((sum, l) => sum + (l.value || 0), 0),
+  }))
+
+  async function completeFollowUp(id: string) {
+    await fetch('/api/sales/follow-ups', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, completed: true }),
+    })
+    setFollowUps((prev) => prev.filter((f) => f.id !== id))
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Sales Intelligence</h1>
-        <p className="text-muted-foreground mt-1">
-          KI-gestütztes Lead-Management & Pipeline
-        </p>
+        <p className="text-muted-foreground mt-1">KI-gestütztes Lead-Management & Pipeline</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="Pipeline-Wert" value="€148.500" change={12.0} icon={<DollarSign className="w-5 h-5" />} />
-        <KpiCard title="Offene Leads" value="23" change={15.3} icon={<Users className="w-5 h-5" />} />
-        <KpiCard title="Win Rate" value="34%" change={2.1} icon={<TrendingUp className="w-5 h-5" />} />
-        <KpiCard title="Avg. Deal-Größe" value="€6.450" change={-1.5} icon={<Target className="w-5 h-5" />} />
+        <KpiCard title="Pipeline-Wert" value={`€${totalValue.toLocaleString('de-DE')}`} icon={<DollarSign className="w-5 h-5" />} />
+        <KpiCard title="Offene Leads" value={String(openLeads)} icon={<Users className="w-5 h-5" />} />
+        <KpiCard title="Win Rate" value={`${winRate}%`} icon={<TrendingUp className="w-5 h-5" />} />
+        <KpiCard title="Avg. Deal-Größe" value={avgDeal > 0 ? `€${Math.round(avgDeal).toLocaleString('de-DE')}` : '—'} icon={<Target className="w-5 h-5" />} />
       </div>
 
-      {/* Pipeline Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pipeline-Übersicht</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 h-8 rounded-lg overflow-hidden">
-            {pipelineStages.map((stage) => (
-              <div
-                key={stage.name}
-                className={`${stage.color} flex-1 flex items-center justify-center`}
-                title={`${stage.name}: ${stage.count} Leads (${stage.value})`}
-              >
-                <span className="text-xs font-medium text-white">{stage.count}</span>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-2 mt-2">
-            {pipelineStages.map((stage) => (
-              <div key={stage.name} className="flex-1 text-center">
-                <p className="text-xs font-medium">{stage.name}</p>
-                <p className="text-xs text-muted-foreground">{stage.value}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Pipeline */}
+      {leads.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>Top Leads (KI-Score)</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Pipeline-Übersicht</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {[
-                { company: 'TechCorp GmbH', score: 92, value: '€18.000', status: 'qualified' },
-                { company: 'Digital Solutions AG', score: 85, value: '€12.500', status: 'proposal' },
-                { company: 'StartupHub Berlin', score: 78, value: '€8.000', status: 'contacted' },
-              ].map((lead) => (
-                <div key={lead.company} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div>
-                    <p className="font-medium text-sm">{lead.company}</p>
-                    <p className="text-xs text-muted-foreground">{lead.value}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-purple-500/10 text-purple-500">{lead.score}/100</Badge>
-                  </div>
+            <div className="flex gap-2 h-8 rounded-lg overflow-hidden">
+              {pipelineStages.filter((s) => s.count > 0).map((stage) => (
+                <div
+                  key={stage.status}
+                  className={`${stage.color} flex items-center justify-center`}
+                  style={{ flex: stage.count }}
+                  title={`${stage.name}: ${stage.count} Leads (€${stage.value.toLocaleString('de-DE')})`}
+                >
+                  <span className="text-xs font-medium text-white">{stage.count}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-2">
+              {pipelineStages.map((stage) => (
+                <div key={stage.status} className="flex-1 text-center">
+                  <p className="text-xs font-medium">{stage.name}</p>
+                  <p className="text-xs text-muted-foreground">€{stage.value.toLocaleString('de-DE')}</p>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
+      )}
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Leads */}
         <Card>
-          <CardHeader>
-            <CardTitle>Fällige Follow-ups</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Top Leads (KI-Score)</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-center py-8">
-              Keine fälligen Follow-ups.
-            </p>
+            {topLeads.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4 text-sm">Noch keine bewerteten Leads.</p>
+            ) : (
+              <div className="space-y-3">
+                {topLeads.map((lead) => (
+                  <button
+                    key={lead.id}
+                    onClick={() => router.push(`/dashboard/sales/leads/${lead.id}`)}
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted text-left transition-colors"
+                  >
+                    <div>
+                      <p className="font-medium text-sm">{lead.company}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {lead.value ? `€${lead.value.toLocaleString('de-DE')}` : 'Kein Wert'}
+                      </p>
+                    </div>
+                    <Badge className="bg-purple-500/10 text-purple-500">{lead.score}/100</Badge>
+                  </button>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Follow-ups */}
+        <Card>
+          <CardHeader><CardTitle>Fällige Follow-ups</CardTitle></CardHeader>
+          <CardContent>
+            {followUps.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4 text-sm">Keine fälligen Follow-ups.</p>
+            ) : (
+              <div className="space-y-2">
+                {followUps.map((fu) => (
+                  <div key={fu.id} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">{fu.subject}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {fu.lead.company} · {fu.type} · {new Date(fu.dueDate).toLocaleDateString('de-DE')}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => completeFollowUp(fu.id)}>
+                      <CheckCircle className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
