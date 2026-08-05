@@ -1,0 +1,370 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+
+model AppSettings {
+  id        String   @id @default("singleton")
+  // API Keys (verschlüsselt)
+  anthropicKey    String?  @map("anthropic_key")
+  openaiKey       String?  @map("openai_key")
+  geminiKey       String?  @map("gemini_key")
+  // Admin
+  adminSecret     String?  @map("admin_secret")
+  cronSecret      String?  @map("cron_secret")
+  // Preferences
+  defaultAiProvider String @default("auto") @map("default_ai_provider")
+  darkMode        Boolean  @default(true)    @map("dark_mode")
+  createdAt       DateTime @default(now())   @map("created_at")
+  updatedAt       DateTime @updatedAt        @map("updated_at")
+
+  @@map("app_settings")
+}
+
+model OAuthToken {
+  id           String   @id @default(cuid())
+  provider     String   // google, meta
+  accessToken  String   @map("access_token")   // verschlüsselt
+  refreshToken String?  @map("refresh_token")  // verschlüsselt
+  expiresAt    DateTime @map("expires_at")
+  scopes       String[] // gewährte Scopes
+  accountId    String?  @map("account_id")     // Google/Meta Account ID
+  accountName  String?  @map("account_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt      @map("updated_at")
+
+  @@unique([provider, accountId])
+  @@map("oauth_tokens")
+}
+
+// ============================================================
+// ADS - Performance Marketing
+// ============================================================
+
+model Campaign {
+  id             String   @id @default(cuid())
+  externalId     String?  @map("external_id")
+  platform       String   // google, meta
+  name           String
+  status         String   @default("draft") // draft, active, paused, ended
+  objective      String?  // conversions, traffic, awareness
+  budget         Float?
+  budgetType     String?  @map("budget_type") // daily, lifetime
+  startDate      DateTime? @map("start_date")
+  endDate        DateTime? @map("end_date")
+  // KI-Empfehlungen
+  aiInsights     String?  @map("ai_insights") @db.Text
+  aiScore        Float?   @map("ai_score")    // 0-100
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt      @map("updated_at")
+
+  adGroups       AdGroup[]
+  metrics        CampaignMetric[]
+  abTests        AbTest[]
+
+  @@index([platform, status])
+  @@map("campaigns")
+}
+
+model AdGroup {
+  id          String   @id @default(cuid())
+  externalId  String?  @map("external_id")
+  campaignId  String   @map("campaign_id")
+  name        String
+  status      String   @default("active")
+  targeting   Json?    // Zielgruppen-Targeting
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
+
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  ads         Ad[]
+
+  @@map("ad_groups")
+}
+
+model Ad {
+  id          String   @id @default(cuid())
+  externalId  String?  @map("external_id")
+  adGroupId   String   @map("ad_group_id")
+  type        String   // text, image, video, carousel
+  headline    String?
+  description String?  @db.Text
+  imageUrl    String?  @map("image_url")
+  landingUrl  String?  @map("landing_url")
+  status      String   @default("active")
+  // KI-Analyse
+  aiAnalysis  String?  @map("ai_analysis") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
+
+  adGroup     AdGroup  @relation(fields: [adGroupId], references: [id], onDelete: Cascade)
+
+  @@map("ads")
+}
+
+model CampaignMetric {
+  id           String   @id @default(cuid())
+  campaignId   String   @map("campaign_id")
+  date         DateTime @db.Date
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  conversions  Int      @default(0)
+  spend        Float    @default(0)
+  revenue      Float    @default(0)
+  ctr          Float?   // Click-Through-Rate
+  cpc          Float?   // Cost per Click
+  roas         Float?   // Return on Ad Spend
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  campaign     Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, date])
+  @@index([date])
+  @@map("campaign_metrics")
+}
+
+model AbTest {
+  id          String   @id @default(cuid())
+  campaignId  String   @map("campaign_id")
+  name        String
+  status      String   @default("running") // running, completed, cancelled
+  variantA    Json     @map("variant_a")
+  variantB    Json     @map("variant_b")
+  winner      String?  // a, b, null
+  confidence  Float?   // Statistisches Konfidenzniveau
+  aiAnalysis  String?  @map("ai_analysis") @db.Text
+  startedAt   DateTime @default(now()) @map("started_at")
+  endedAt     DateTime? @map("ended_at")
+
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("ab_tests")
+}
+
+// ============================================================
+// SEO & Analytics
+// ============================================================
+
+model TrackedKeyword {
+  id          String   @id @default(cuid())
+  keyword     String
+  domain      String
+  location    String   @default("DE") // Land
+  language    String   @default("de")
+  currentRank Int?     @map("current_rank")
+  bestRank    Int?     @map("best_rank")
+  searchVolume Int?    @map("search_volume")
+  difficulty  Float?   // 0-100
+  url         String?  // Rankende URL
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
+
+  history     KeywordHistory[]
+
+  @@unique([keyword, domain])
+  @@map("tracked_keywords")
+}
+
+model KeywordHistory {
+  id        String   @id @default(cuid())
+  keywordId String   @map("keyword_id")
+  date      DateTime @db.Date
+  rank      Int?
+  url       String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  keyword   TrackedKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([keywordId, date])
+  @@index([date])
+  @@map("keyword_history")
+}
+
+model SeoAudit {
+  id          String   @id @default(cuid())
+  domain      String
+  score       Float?   // 0-100
+  issues      Json?    // { critical: [], warning: [], info: [] }
+  performance Json?    // Core Web Vitals
+  aiSummary   String?  @map("ai_summary") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("seo_audits")
+}
+
+model ContentPlan {
+  id           String   @id @default(cuid())
+  title        String
+  keyword      String?
+  status       String   @default("idea") // idea, planned, writing, published
+  contentType  String   @map("content_type") // blog, landing, product
+  outline      String?  @db.Text
+  aiDraft      String?  @map("ai_draft") @db.Text
+  publishDate  DateTime? @map("publish_date")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt      @map("updated_at")
+
+  @@map("content_plans")
+}
+
+model AnalyticsSnapshot {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  sessions    Int      @default(0)
+  users       Int      @default(0)
+  pageviews   Int      @default(0)
+  bounceRate  Float?   @map("bounce_rate")
+  avgDuration Float?   @map("avg_duration") // Sekunden
+  topPages    Json?    @map("top_pages")
+  topSources  Json?    @map("top_sources")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([date])
+  @@map("analytics_snapshots")
+}
+
+// ============================================================
+// SALES Intelligence
+// ============================================================
+
+model Lead {
+  id           String   @id @default(cuid())
+  company      String
+  contactName  String?  @map("contact_name")
+  email        String?
+  phone        String?
+  website      String?
+  source       String?  // website, referral, cold, ad
+  status       String   @default("new") // new, contacted, qualified, proposal, won, lost
+  score        Int?     // 0-100, KI-berechnet
+  value        Float?   // Geschätzter Deal-Wert
+  notes        String?  @db.Text
+  aiProfile    String?  @map("ai_profile") @db.Text // KI-generiertes Firmenprofil
+  nextFollowUp DateTime? @map("next_follow_up")
+  wonAt        DateTime? @map("won_at")
+  lostAt       DateTime? @map("lost_at")
+  lostReason   String?  @map("lost_reason")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt      @map("updated_at")
+
+  activities   LeadActivity[]
+  followUps    FollowUp[]
+  proposals    Proposal[]
+
+  @@index([status])
+  @@index([score])
+  @@map("leads")
+}
+
+model LeadActivity {
+  id        String   @id @default(cuid())
+  leadId    String   @map("lead_id")
+  type      String   // email, call, meeting, note, status_change
+  subject   String?
+  content   String?  @db.Text
+  metadata  Json?    // Zusätzliche Daten
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, createdAt])
+  @@map("lead_activities")
+}
+
+model FollowUp {
+  id          String   @id @default(cuid())
+  leadId      String   @map("lead_id")
+  dueDate     DateTime @map("due_date")
+  type        String   // email, call, meeting
+  subject     String
+  description String?  @db.Text
+  completed   Boolean  @default(false)
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([dueDate, completed])
+  @@map("follow_ups")
+}
+
+model Proposal {
+  id          String   @id @default(cuid())
+  leadId      String   @map("lead_id")
+  title       String
+  content     String   @db.Text // KI-generierter Inhalt
+  value       Float?
+  status      String   @default("draft") // draft, sent, accepted, rejected
+  sentAt      DateTime? @map("sent_at")
+  respondedAt DateTime? @map("responded_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
+
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("proposals")
+}
+
+// ============================================================
+// SYSTEM
+// ============================================================
+
+model AiConversation {
+  id        String   @id @default(cuid())
+  title     String?
+  messages  Json     // Array von Messages
+  module    String?  // ads, seo, sales, general
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@map("ai_conversations")
+}
+
+model AiUsageLog {
+  id        String   @id @default(cuid())
+  provider  String   // claude, openai, gemini
+  model     String
+  taskType  String   @map("task_type")
+  tokens    Int      @default(0)
+  cost      Float    @default(0)
+  duration  Int      @default(0) // ms
+  success   Boolean  @default(true)
+  error     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([provider, createdAt])
+  @@index([taskType])
+  @@map("ai_usage_logs")
+}
+
+model SyncLog {
+  id        String   @id @default(cuid())
+  type      String   // ads, seo, analytics
+  provider  String   // google, meta
+  status    String   // running, success, error
+  details   String?  @db.Text
+  itemCount Int?     @map("item_count")
+  startedAt DateTime @default(now()) @map("started_at")
+  endedAt   DateTime? @map("ended_at")
+
+  @@index([type, startedAt])
+  @@map("sync_logs")
+}
+
+model WeeklyReport {
+  id        String   @id @default(cuid())
+  weekStart DateTime @map("week_start") @db.Date
+  content   String   @db.Text // KI-generierter Report
+  metrics   Json?    // Zusammengefasste KPIs
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([weekStart])
+  @@map("weekly_reports")
+}
