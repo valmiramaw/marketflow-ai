@@ -28,7 +28,7 @@ export class ClaudeProvider implements AiProviderClient {
       }))
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: request.maxTokens || 4096,
       temperature: request.temperature ?? 0.7,
       system: systemPrompt,
@@ -41,7 +41,7 @@ export class ClaudeProvider implements AiProviderClient {
     return {
       content,
       provider: 'claude',
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       tokens: {
         input: response.usage.input_tokens,
         output: response.usage.output_tokens,
