@@ -44,6 +44,21 @@ export interface AiCompletionResponse {
   duration: number
 }
 
+// Multi-KI Kollaboration
+export interface AiCollaborationResponse {
+  synthesis: string
+  perspectives: {
+    provider: AiProvider
+    model: string
+    content: string
+    tokens: { input: number; output: number }
+    duration: number
+  }[]
+  synthesizer: AiProvider
+  totalTokens: { input: number; output: number }
+  totalDuration: number
+}
+
 export interface AiProviderClient {
   complete(request: AiCompletionRequest): Promise<AiCompletionResponse>
   isConfigured(): boolean

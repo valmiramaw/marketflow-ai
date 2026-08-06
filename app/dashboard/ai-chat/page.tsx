@@ -5,20 +5,48 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Send, Bot, User, Sparkles, Loader2 } from 'lucide-react'
+import {
+  Send, Bot, User, Sparkles, Loader2,
+  Brain, Zap, ChevronDown, ChevronUp,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+interface Perspective {
+  provider: string
+  model: string
+  content: string
+  duration: number
+}
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   provider?: string
   model?: string
+  mode?: 'single' | 'collab'
+  perspectives?: Perspective[]
+  synthesizer?: string
+  providerCount?: number
+}
+
+const PROVIDER_COLORS: Record<string, string> = {
+  claude: 'bg-orange-500/10 text-orange-600 border-orange-500/30',
+  openai: 'bg-green-500/10 text-green-600 border-green-500/30',
+  gemini: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
+}
+
+const PROVIDER_NAMES: Record<string, string> = {
+  claude: 'Claude',
+  openai: 'GPT-4o',
+  gemini: 'Gemini',
 }
 
 export default function AiChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [collabMode, setCollabMode] = useState(false)
+  const [expandedPerspectives, setExpandedPerspectives] = useState<Record<number, boolean>>({})
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -42,6 +70,7 @@ export default function AiChatPage() {
             role: m.role,
             content: m.content,
           })),
+          mode: collabMode ? 'collab' : 'single',
         }),
       })
 
@@ -62,6 +91,10 @@ export default function AiChatPage() {
           content: data.content,
           provider: data.provider,
           model: data.model,
+          mode: data.mode,
+          perspectives: data.perspectives,
+          synthesizer: data.synthesizer,
+          providerCount: data.providerCount,
         },
       ])
     } catch {
@@ -81,14 +114,52 @@ export default function AiChatPage() {
     }
   }
 
+  function togglePerspective(index: number) {
+    setExpandedPerspectives((prev) => ({ ...prev, [index]: !prev[index] }))
+  }
+
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="mb-4">
-        <h1 className="text-3xl font-bold">KI-Assistent</h1>
-        <p className="text-muted-foreground mt-1">
-          Übergreifender Marketing- & Sales-Assistent (Multi-KI)
-        </p>
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">KI-Assistent</h1>
+          <p className="text-muted-foreground mt-1">
+            Multi-KI Marketing- & Sales-Assistent
+          </p>
+        </div>
+
+        {/* Kollaboration Toggle */}
+        <button
+          onClick={() => setCollabMode(!collabMode)}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-lg border transition-all text-sm font-medium',
+            collabMode
+              ? 'bg-gradient-to-r from-orange-500/10 via-green-500/10 to-blue-500/10 border-primary text-primary'
+              : 'bg-muted border-border text-muted-foreground hover:text-foreground'
+          )}
+        >
+          {collabMode ? (
+            <>
+              <Brain className="w-4 h-4" />
+              Multi-KI Aktiv
+            </>
+          ) : (
+            <>
+              <Zap className="w-4 h-4" />
+              Einzelne KI
+            </>
+          )}
+        </button>
       </div>
+
+      {/* Collab Info */}
+      {collabMode && (
+        <div className="mb-3 p-3 rounded-lg bg-gradient-to-r from-orange-500/5 via-green-500/5 to-blue-500/5 border border-primary/20 text-sm">
+          <span className="font-medium">Multi-KI Modus:</span>{' '}
+          Claude, GPT-4o und Gemini arbeiten zusammen. Jede KI gibt ihre Perspektive,
+          dann werden die besten Ideen kombiniert.
+        </div>
+      )}
 
       {/* Chat Area */}
       <Card className="flex-1 flex flex-col overflow-hidden">
@@ -125,38 +196,127 @@ export default function AiChatPage() {
           )}
 
           {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={cn('flex gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}
-            >
-              {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-white" />
-                </div>
-              )}
+            <div key={i}>
               <div
-                className={cn(
-                  'max-w-[80%] rounded-lg p-3',
-                  msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted'
-                )}
+                className={cn('flex gap-3', msg.role === 'user' ? 'justify-end' : 'justify-start')}
               >
-                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                {msg.provider && (
-                  <div className="mt-2 flex gap-1">
-                    <Badge variant="secondary" className="text-[10px]">
-                      {msg.provider}
-                    </Badge>
-                    <Badge variant="secondary" className="text-[10px]">
-                      {msg.model}
-                    </Badge>
+                {msg.role === 'assistant' && (
+                  <div className={cn(
+                    'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                    msg.mode === 'collab'
+                      ? 'bg-gradient-to-br from-orange-500 via-green-500 to-blue-500'
+                      : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                  )}>
+                    {msg.mode === 'collab' ? (
+                      <Brain className="w-4 h-4 text-white" />
+                    ) : (
+                      <Bot className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    'max-w-[80%] rounded-lg p-3',
+                    msg.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  )}
+                >
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+
+                  {/* Provider Badges */}
+                  {msg.role === 'assistant' && (msg.provider || msg.mode === 'collab') && (
+                    <div className="mt-2 flex flex-wrap gap-1 items-center">
+                      {msg.mode === 'collab' && msg.perspectives ? (
+                        <>
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] bg-gradient-to-r from-orange-500/10 to-blue-500/10"
+                          >
+                            Multi-KI ({msg.providerCount} Provider)
+                          </Badge>
+                          {msg.perspectives.map((p) => (
+                            <Badge
+                              key={p.provider}
+                              variant="outline"
+                              className={cn('text-[10px]', PROVIDER_COLORS[p.provider])}
+                            >
+                              {PROVIDER_NAMES[p.provider] || p.provider}
+                            </Badge>
+                          ))}
+                          {msg.synthesizer && (
+                            <Badge variant="outline" className="text-[10px]">
+                              Synthese: {PROVIDER_NAMES[msg.synthesizer] || msg.synthesizer}
+                            </Badge>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <Badge
+                            variant="outline"
+                            className={cn('text-[10px]', PROVIDER_COLORS[msg.provider || ''])}
+                          >
+                            {PROVIDER_NAMES[msg.provider || ''] || msg.provider}
+                          </Badge>
+                          {msg.model && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {msg.model}
+                            </Badge>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {msg.role === 'user' && (
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4" />
                   </div>
                 )}
               </div>
-              {msg.role === 'user' && (
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4" />
+
+              {/* Einzelne Perspektiven (aufklappbar) */}
+              {msg.mode === 'collab' && msg.perspectives && msg.perspectives.length > 1 && (
+                <div className="ml-11 mt-2">
+                  <button
+                    onClick={() => togglePerspective(i)}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {expandedPerspectives[i] ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
+                    Einzelne KI-Perspektiven anzeigen ({msg.perspectives.length})
+                  </button>
+
+                  {expandedPerspectives[i] && (
+                    <div className="mt-2 space-y-2">
+                      {msg.perspectives.map((p) => (
+                        <div
+                          key={p.provider}
+                          className={cn(
+                            'rounded-lg p-3 border text-sm',
+                            PROVIDER_COLORS[p.provider]
+                          )}
+                        >
+                          <div className="flex items-center gap-2 mb-2 font-medium">
+                            <div className={cn(
+                              'w-2 h-2 rounded-full',
+                              p.provider === 'claude' ? 'bg-orange-500'
+                                : p.provider === 'openai' ? 'bg-green-500'
+                                : 'bg-blue-500'
+                            )} />
+                            {PROVIDER_NAMES[p.provider]} ({p.model})
+                            <span className="text-[10px] opacity-60">{(p.duration / 1000).toFixed(1)}s</span>
+                          </div>
+                          <p className="whitespace-pre-wrap text-foreground text-xs leading-relaxed">
+                            {p.content}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -164,12 +324,23 @@ export default function AiChatPage() {
 
           {loading && (
             <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-white" />
+              <div className={cn(
+                'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                collabMode
+                  ? 'bg-gradient-to-br from-orange-500 via-green-500 to-blue-500'
+                  : 'bg-gradient-to-br from-blue-500 to-purple-600'
+              )}>
+                {collabMode ? (
+                  <Brain className="w-4 h-4 text-white" />
+                ) : (
+                  <Bot className="w-4 h-4 text-white" />
+                )}
               </div>
               <div className="bg-muted rounded-lg p-3 flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm text-muted-foreground">Denkt nach...</span>
+                <span className="text-sm text-muted-foreground">
+                  {collabMode ? 'Alle KIs arbeiten zusammen...' : 'Denkt nach...'}
+                </span>
               </div>
             </div>
           )}
@@ -183,7 +354,11 @@ export default function AiChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Nachricht eingeben... (Enter = Senden, Shift+Enter = Neue Zeile)"
+              placeholder={
+                collabMode
+                  ? 'Nachricht an alle KIs... (Enter = Senden)'
+                  : 'Nachricht eingeben... (Enter = Senden, Shift+Enter = Neue Zeile)'
+              }
               className="min-h-[44px] max-h-[120px] resize-none"
               rows={1}
             />
