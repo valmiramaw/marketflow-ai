@@ -197,7 +197,7 @@ export default function CampaignsPage() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <Badge variant="outline">{c.platform === 'google' ? 'Google' : 'Meta'}</Badge>
+                        <Badge variant="outline">{{ google: 'Google', meta: 'Meta', tiktok: 'TikTok', snapchat: 'Snapchat' }[c.platform] || c.platform}</Badge>
                       </td>
                       <td className="p-4">
                         <Badge className={statusColors[c.status] || ''}>
@@ -347,6 +347,8 @@ export default function CampaignsPage() {
                 >
                   <option value="google">Google Ads</option>
                   <option value="meta">Meta Ads</option>
+                  <option value="tiktok">TikTok Ads</option>
+                  <option value="snapchat">Snapchat Ads</option>
                 </select>
               </div>
               <div>

@@ -56,18 +56,18 @@ export default function AdsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Performance Marketing</h1>
-        <p className="text-muted-foreground mt-1">Google Ads & Meta Ads Kampagnen</p>
+        <p className="text-muted-foreground mt-1">Alle Ads-Kampagnen im Überblick</p>
       </div>
 
       <InfoBox title="Performance Marketing - So funktioniert's" variant="ai" storageKey="ads-intro">
-        <p>Verwalte deine Google Ads & Meta Ads Kampagnen mit KI-Unterstützung.</p>
+        <p>Verwalte deine Google, Meta, TikTok & Snapchat Ads Kampagnen mit KI-Unterstützung.</p>
         <ul>
           <li><strong>Kampagnen</strong> - Erstelle und verwalte Kampagnen, die KI analysiert Performance und gibt dir einen Score (0-100)</li>
           <li><strong>Budgets</strong> - Sehe Budget-Auslastung pro Kampagne, lass die KI Optimierungsvorschläge machen</li>
           <li><strong>A/B Tests</strong> - Vergleiche zwei Varianten, die KI wertet aus welche besser performt</li>
           <li><strong>Werbemittel</strong> - Lade Creatives hoch, Gemini Vision analysiert Bilder automatisch</li>
         </ul>
-        <p className="mt-2">Google Ads Sync: Verbinde Google unter Einstellungen, dann werden Kampagnen-Daten taeglich um 06:00 automatisch synchronisiert.</p>
+        <p className="mt-2">Unterstützte Plattformen: Google Ads, Meta Ads, TikTok Ads & Snapchat Ads. Verbinde Google unter Einstellungen für automatischen Daten-Sync.</p>
       </InfoBox>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -128,7 +128,7 @@ export default function AdsPage() {
                     >
                       <div className="flex items-center gap-3">
                         <Badge variant="outline" className="text-xs">
-                          {c.platform === 'google' ? 'Google' : 'Meta'}
+                          {{ google: 'Google', meta: 'Meta', tiktok: 'TikTok', snapchat: 'Snapchat' }[c.platform] || c.platform}
                         </Badge>
                         <div>
                           <p className="text-sm font-medium">{c.name}</p>

@@ -11,7 +11,7 @@ interface CalendarEvent {
   id: string
   title: string
   date: string
-  type: 'social' | 'followup' | 'email' | 'automation'
+  type: 'social' | 'followup' | 'email' | 'automation' | 'ads'
   status?: string
   meta?: Record<string, string>
 }
@@ -27,6 +27,7 @@ const TYPE_CONFIG: Record<string, { label: string; dot: string; badge: string }>
   followup: { label: 'Follow-Up', dot: 'bg-purple-500', badge: 'bg-purple-500/10 text-purple-500' },
   email: { label: 'E-Mail', dot: 'bg-blue-500', badge: 'bg-blue-500/10 text-blue-500' },
   automation: { label: 'Automation', dot: 'bg-amber-500', badge: 'bg-amber-500/10 text-amber-500' },
+  ads: { label: 'Ads', dot: 'bg-orange-500', badge: 'bg-orange-500/10 text-orange-500' },
 }
 
 export default function CalendarPage() {

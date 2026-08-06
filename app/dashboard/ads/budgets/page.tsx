@@ -135,7 +135,7 @@ export default function BudgetsPage() {
                 <div key={c.id} className="p-3 rounded-lg border bg-muted/30">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">{c.platform === 'google' ? 'Google' : 'Meta'}</Badge>
+                      <Badge variant="outline" className="text-xs">{{ google: 'Google', meta: 'Meta', tiktok: 'TikTok', snapchat: 'Snapchat' }[c.platform] || c.platform}</Badge>
                       <span className="text-sm font-medium">{c.name}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">

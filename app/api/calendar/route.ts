@@ -5,7 +5,7 @@ export interface CalendarEvent {
   id: string
   title: string
   date: string // ISO date string
-  type: 'social' | 'followup' | 'email' | 'automation'
+  type: 'social' | 'followup' | 'email' | 'automation' | 'ads'
   status?: string
   meta?: Record<string, string>
 }
@@ -112,6 +112,43 @@ export async function GET(request: NextRequest) {
           }
           current.setDate(current.getDate() + 1)
         }
+      }
+    }
+
+    // 5. Ads Campaigns (startDate or endDate in range, not ended)
+    const platformLabels: Record<string, string> = { google: 'Google', meta: 'Meta', tiktok: 'TikTok', snapchat: 'Snapchat' }
+    const campaigns = await prisma.campaign.findMany({
+      where: {
+        status: { in: ['draft', 'active', 'paused', 'scheduled'] },
+        OR: [
+          { startDate: { gte: start, lte: end } },
+          { endDate: { gte: start, lte: end } },
+          { AND: [{ startDate: { lte: start } }, { endDate: { gte: end } }] },
+        ],
+      },
+      select: { id: true, name: true, platform: true, startDate: true, endDate: true, status: true, budget: true },
+    })
+    for (const c of campaigns) {
+      const label = platformLabels[c.platform] || c.platform
+      if (c.startDate && c.startDate >= start && c.startDate <= end) {
+        events.push({
+          id: `${c.id}-start`,
+          title: `${label} Ads: ${c.name} (Start)`,
+          date: c.startDate.toISOString(),
+          type: 'ads',
+          status: c.status,
+          meta: { platform: c.platform },
+        })
+      }
+      if (c.endDate && c.endDate >= start && c.endDate <= end) {
+        events.push({
+          id: `${c.id}-end`,
+          title: `${label} Ads: ${c.name} (Ende)`,
+          date: c.endDate.toISOString(),
+          type: 'ads',
+          status: c.status,
+          meta: { platform: c.platform },
+        })
       }
     }
 

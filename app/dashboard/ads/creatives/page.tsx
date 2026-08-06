@@ -204,7 +204,7 @@ export default function CreativesPage() {
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{c.description}</p>
                   )}
                   <p className="text-xs text-muted-foreground mt-2">
-                    {c.adGroup.campaign.name} ({c.adGroup.campaign.platform === 'google' ? 'Google' : 'Meta'})
+                    {c.adGroup.campaign.name} ({{ google: 'Google', meta: 'Meta', tiktok: 'TikTok', snapchat: 'Snapchat' }[c.adGroup.campaign.platform] || c.adGroup.campaign.platform})
                   </p>
 
                   {c.landingUrl && (

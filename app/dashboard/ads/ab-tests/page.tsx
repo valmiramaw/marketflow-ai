@@ -162,7 +162,7 @@ export default function AbTestsPage() {
                     <div>
                       <CardTitle className="text-lg">{test.name}</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        Kampagne: {test.campaign.name} ({test.campaign.platform === 'google' ? 'Google' : 'Meta'})
+                        Kampagne: {test.campaign.name} ({{ google: 'Google', meta: 'Meta', tiktok: 'TikTok', snapchat: 'Snapchat' }[test.campaign.platform] || test.campaign.platform})
                       </p>
                     </div>
                     <div className="flex items-center gap-2">

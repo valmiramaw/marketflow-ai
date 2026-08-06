@@ -55,7 +55,7 @@ model OAuthToken {
 model Campaign {
   id             String   @id @default(cuid())
   externalId     String?  @unique @map("external_id")
-  platform       String   // google, meta
+  platform       String   // google, meta, tiktok, snapchat
   name           String
   status         String   @default("draft") // draft, active, paused, ended
   objective      String?  // conversions, traffic, awareness
