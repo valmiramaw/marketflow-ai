@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Save, Eye, EyeOff, CheckCircle, XCircle, Key, Globe, Zap, Loader2, Unlink, Cloud,
+  Save, Eye, EyeOff, CheckCircle, XCircle, Key, Globe, Zap, Loader2, Unlink, Cloud, Bell, Send,
 } from 'lucide-react'
 
 export default function SettingsPage() {
@@ -44,10 +44,18 @@ function SettingsContent() {
   }>({ connected: false })
   const [connectingGoogle, setConnectingGoogle] = useState(false)
   const [notification, setNotification] = useState<string | null>(null)
+  const [emailStatus, setEmailStatus] = useState<{
+    configured: boolean
+    hasApiKey: boolean
+    hasRecipients: boolean
+    recipientCount: number
+  }>({ configured: false, hasApiKey: false, hasRecipients: false, recipientCount: 0 })
+  const [sendingTest, setSendingTest] = useState(false)
 
   useEffect(() => {
     fetchSettings()
     fetchGoogleStatus()
+    fetchEmailStatus()
     const success = searchParams.get('success')
     const error = searchParams.get('error')
     if (success === 'google_connected') {
@@ -112,6 +120,30 @@ function SettingsContent() {
     setNotification('Google-Verbindung getrennt.')
   }
 
+  async function fetchEmailStatus() {
+    try {
+      const res = await fetch('/api/notifications')
+      if (res.ok) setEmailStatus(await res.json())
+    } catch { /* ignore */ }
+  }
+
+  async function sendTestEmail() {
+    setSendingTest(true)
+    try {
+      const res = await fetch('/api/notifications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+      const data = await res.json()
+      if (res.ok) {
+        setNotification('Test-E-Mail wurde gesendet! Überprüfe deinen Posteingang.')
+      } else {
+        setNotification(data.error || 'Fehler beim Senden')
+      }
+    } catch {
+      setNotification('Fehler beim Senden der Test-E-Mail')
+    } finally {
+      setSendingTest(false)
+    }
+  }
+
   const hasAwsBedrock = !!(settings.awsAccessKeyId && settings.awsSecretAccessKey)
 
   return (
@@ -137,6 +169,9 @@ function SettingsContent() {
           </TabsTrigger>
           <TabsTrigger value="aws">
             <Cloud className="w-4 h-4 mr-2" />AWS Bedrock
+          </TabsTrigger>
+          <TabsTrigger value="notifications">
+            <Bell className="w-4 h-4 mr-2" />Benachrichtigungen
           </TabsTrigger>
           <TabsTrigger value="integrations">
             <Globe className="w-4 h-4 mr-2" />Integrationen
@@ -339,6 +374,85 @@ function SettingsContent() {
               <><Save className="w-4 h-4 mr-2" />{saving ? 'Speichern...' : 'AWS Bedrock speichern'}</>
             )}
           </Button>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Bell className="w-5 h-5" />E-Mail-Benachrichtigungen
+                  </CardTitle>
+                  <CardDescription>
+                    Interne Benachrichtigungen per E-Mail über Resend
+                  </CardDescription>
+                </div>
+                <Badge className={emailStatus.configured ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}>
+                  {emailStatus.configured ? <><CheckCircle className="w-3 h-3 mr-1" />Aktiv</> : <><XCircle className="w-3 h-3 mr-1" />Nicht konfiguriert</>}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="text-sm font-medium">RESEND_API_KEY</p>
+                    <p className="text-xs text-muted-foreground">API-Key von resend.com</p>
+                  </div>
+                  <Badge className={emailStatus.hasApiKey ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}>
+                    {emailStatus.hasApiKey ? 'Gesetzt' : 'Fehlt'}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div>
+                    <p className="text-sm font-medium">NOTIFICATION_EMAILS</p>
+                    <p className="text-xs text-muted-foreground">Kommaseparierte E-Mail-Adressen</p>
+                  </div>
+                  <Badge className={emailStatus.hasRecipients ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}>
+                    {emailStatus.hasRecipients ? `${emailStatus.recipientCount} Empfänger` : 'Fehlt'}
+                  </Badge>
+                </div>
+              </div>
+
+              {!emailStatus.configured && (
+                <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground mb-1">So richtest du es ein:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Erstelle einen Account auf <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com</a> (kostenlos, 100 Mails/Tag)</li>
+                    <li>Kopiere deinen API-Key</li>
+                    <li>Füge in <code className="bg-muted px-1 rounded">.env.local</code> hinzu:</li>
+                  </ol>
+                  <pre className="mt-2 p-2 rounded bg-muted text-xs overflow-x-auto">
+{`RESEND_API_KEY=re_xxxxxxxx
+NOTIFICATION_EMAILS=du@email.com,kollegin@email.com`}
+                  </pre>
+                  <p className="mt-2">Auf Vercel: Settings → Environment Variables → beide Werte setzen.</p>
+                </div>
+              )}
+
+              {emailStatus.configured && (
+                <Button onClick={sendTestEmail} disabled={sendingTest}>
+                  {sendingTest ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-2" />
+                  )}
+                  Test-E-Mail senden
+                </Button>
+              )}
+
+              <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 text-sm text-muted-foreground">
+                <p className="font-medium text-foreground mb-2">Wann wirst du benachrichtigt:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Neuer Lead erstellt</li>
+                  <li>Lead-Score über 80 (Hot Lead)</li>
+                  <li>Wettbewerber-Analyse abgeschlossen</li>
+                  <li>Wochenbericht generiert</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-4 mt-4">

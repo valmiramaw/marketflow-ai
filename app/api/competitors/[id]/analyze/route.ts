@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { aiComplete } from '@/lib/ai/router'
 import { getBrandContext, formatBrandSystemPrompt } from '@/lib/brand-context'
+import { sendNotification } from '@/lib/email'
 
 export async function POST(
   _request: NextRequest,
@@ -56,6 +57,14 @@ Erstelle eine strukturierte Analyse mit folgenden Abschnitten:
         lastAnalyzedAt: new Date(),
       },
     })
+
+    // Benachrichtigung
+    sendNotification({
+      subject: `Wettbewerbsanalyse: ${competitor.name}`,
+      body: `Die KI-Analyse für "${competitor.name}" wurde abgeschlossen.\n\n${result.content.slice(0, 300)}...`,
+      module: 'competitors',
+      actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/competitors`,
+    }).catch(() => {})
 
     return NextResponse.json(updated)
   } catch {

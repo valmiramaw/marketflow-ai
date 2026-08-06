@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { aiComplete } from '@/lib/ai/router'
+import { sendNotification } from '@/lib/email'
 
 // GET - Alle Wochenberichte
 export async function GET() {
@@ -137,6 +138,14 @@ Format: Markdown`,
       metrics: metricsData,
     },
   })
+
+  // Benachrichtigung
+  sendNotification({
+    subject: `Wochenbericht KW ${getWeekNumber(weekStart)} ist fertig`,
+    body: `Der Wochenbericht wurde generiert.\n\nHighlights:\n- ${campaigns.length} aktive Kampagnen\n- ${newLeads} neue Leads\n- ${wonDeals.length} gewonnene Deals\n- Pipeline: €${pipelineValue.toFixed(0)}\n- ${aiUsage.length} KI-Aufrufe`,
+    module: 'reports',
+    actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/reports`,
+  }).catch(() => {})
 
   return NextResponse.json(report, { status: 201 })
 }

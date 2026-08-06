@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { aiComplete } from '@/lib/ai/router'
+import { sendNotification } from '@/lib/email'
 
 export async function GET() {
   try {
@@ -38,6 +39,14 @@ export async function POST(request: NextRequest) {
 
     // KI-Scoring (async, fire-and-forget)
     scoreLead(lead.id, body).catch(() => {})
+
+    // Benachrichtigung (async, fire-and-forget)
+    sendNotification({
+      subject: `Neuer Lead: ${body.company}`,
+      body: `Ein neuer Lead wurde erstellt.\n\nFirma: ${body.company}\nKontakt: ${body.contactName || '–'}\nE-Mail: ${body.email || '–'}\nQuelle: ${body.source || '–'}\nGeschätzter Wert: ${body.value ? `€${body.value}` : '–'}`,
+      module: 'sales',
+      actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sales/leads`,
+    }).catch(() => {})
 
     // Activity loggen
     await prisma.leadActivity.create({
@@ -81,13 +90,24 @@ Antworte als JSON: { "score": number, "profile": "string mit 2-3 Sätzen" }`,
     })
 
     const parsed = JSON.parse(result.content)
+    const score = Math.min(100, Math.max(0, parsed.score))
     await prisma.lead.update({
       where: { id: leadId },
       data: {
-        score: Math.min(100, Math.max(0, parsed.score)),
+        score,
         aiProfile: parsed.profile,
       },
     })
+
+    // Benachrichtigung bei hohem Score
+    if (score >= 80) {
+      sendNotification({
+        subject: `🔥 High-Score Lead: ${leadData.company} (${score}/100)`,
+        body: `Der Lead "${leadData.company}" hat einen KI-Score von ${score}/100 erhalten.\n\n${parsed.profile || ''}\n\nDieser Lead verdient besondere Aufmerksamkeit!`,
+        module: 'sales',
+        actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sales/leads`,
+      }).catch(() => {})
+    }
   } catch {
     // Scoring fehlgeschlagen, Lead existiert trotzdem
   }
