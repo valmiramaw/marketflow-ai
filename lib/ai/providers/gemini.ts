@@ -37,7 +37,7 @@ export class GeminiProvider implements AiProviderClient {
         maxOutputTokens: request.maxTokens || 4096,
         ...(request.jsonMode ? { responseMimeType: 'application/json' } : {}),
       },
-      systemInstruction,
+      systemInstruction: { role: 'user' as const, parts: [{ text: systemInstruction }] },
     })
 
     const result = await chat.sendMessage(lastMessage.content)
