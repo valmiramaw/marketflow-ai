@@ -317,6 +317,46 @@ model Proposal {
 }
 
 // ============================================================
+// BRAND & CONTENT
+// ============================================================
+
+model BrandProfile {
+  id                String   @id @default("singleton")
+  brandName         String   @map("brand_name")
+  slogan            String?
+  description       String?  @db.Text
+  targetAudience    String?  @map("target_audience") @db.Text
+  brandValues       Json?    @map("brand_values") // String[]
+  tonality          String   @default("professional")
+  colors            Json?    // { primary, secondary, accent }
+  industry          String?
+  primaryLanguage   String   @default("de") @map("primary_language")
+  secondaryLanguage String?  @map("secondary_language")
+  aiContext         String?  @map("ai_context") @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("brand_profiles")
+}
+
+model ProductContent {
+  id               String   @id @default(cuid())
+  title            String
+  productName      String?  @map("product_name")
+  contentType      String   @map("content_type") // product_description, blog_article, recipe, landing_page, social_post
+  language         String   @default("de")
+  keyword          String?
+  prompt           String?  @db.Text
+  generatedContent String?  @map("generated_content") @db.Text
+  status           String   @default("draft") // draft, reviewed, final
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([contentType, status])
+  @@map("product_contents")
+}
+
+// ============================================================
 // SYSTEM
 // ============================================================
 

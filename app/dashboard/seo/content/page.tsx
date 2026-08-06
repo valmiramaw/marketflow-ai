@@ -8,8 +8,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, Loader2, Sparkles, PenLine, Trash2, Eye } from 'lucide-react'
+import { Plus, Loader2, Sparkles, PenLine, Trash2, Eye, Lightbulb } from 'lucide-react'
 import { InfoBox } from '../../components/info-box'
+
+interface ContentSuggestion {
+  title: string
+  keyword: string
+  contentType: string
+  reason: string
+}
 
 interface ContentPlan {
   id: string
@@ -36,6 +43,9 @@ export default function ContentPage() {
   const [showNew, setShowNew] = useState(false)
   const [generating, setGenerating] = useState<string | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [suggestions, setSuggestions] = useState<ContentSuggestion[]>([])
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
   useEffect(() => { fetchPlans() }, [])
 
@@ -87,6 +97,36 @@ export default function ContentPage() {
     setPlans((prev) => prev.filter((p) => p.id !== id))
   }
 
+  async function fetchSuggestions() {
+    setLoadingSuggestions(true)
+    setSuggestions([])
+    setShowSuggestions(true)
+    try {
+      const res = await fetch('/api/seo/content/suggest', { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        setSuggestions(data.suggestions || [])
+      }
+    } catch { /* ignore */ } finally { setLoadingSuggestions(false) }
+  }
+
+  async function adoptSuggestion(s: ContentSuggestion) {
+    const res = await fetch('/api/seo/content', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: s.title,
+        keyword: s.keyword,
+        contentType: s.contentType === 'landing' ? 'landing' : 'blog',
+        status: 'idea',
+      }),
+    })
+    if (res.ok) {
+      fetchPlans()
+      setSuggestions((prev) => prev.filter((x) => x.title !== s.title))
+    }
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
   }
@@ -98,9 +138,53 @@ export default function ContentPage() {
           <h1 className="text-3xl font-bold">Content-Strategie</h1>
           <p className="text-muted-foreground mt-1">{plans.length} Content-Pläne</p>
         </div>
-        <Button onClick={() => setShowNew(true)}>
-          <Plus className="w-4 h-4 mr-2" />Neuer Content-Plan
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchSuggestions} disabled={loadingSuggestions}>
+            {loadingSuggestions ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Lightbulb className="w-4 h-4 mr-2" />}
+            KI-Vorschläge
+          </Button>
+          <Button onClick={() => setShowNew(true)}>
+            <Plus className="w-4 h-4 mr-2" />Neuer Content-Plan
+          </Button>
+        </div>
+
+        {/* KI-Vorschläge Dialog */}
+        <Dialog open={showSuggestions} onOpenChange={setShowSuggestions}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>KI-Themenvorschläge</DialogTitle>
+            </DialogHeader>
+            {loadingSuggestions ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                <span className="ml-3 text-muted-foreground">Generiere Vorschläge...</span>
+              </div>
+            ) : suggestions.length === 0 ? (
+              <p className="text-muted-foreground py-4">Keine Vorschläge verfügbar.</p>
+            ) : (
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+                {suggestions.map((s, i) => (
+                  <div key={i} className="border rounded-lg p-4 space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium">{s.title}</p>
+                        <div className="flex gap-2 mt-1">
+                          <Badge variant="outline">{s.keyword}</Badge>
+                          <Badge variant="secondary">{s.contentType === 'landing' ? 'Landing Page' : 'Blog'}</Badge>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => adoptSuggestion(s)}>
+                        <Plus className="w-4 h-4 mr-1" />Übernehmen
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{s.reason}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={showNew} onOpenChange={setShowNew}>
           <DialogContent>
             <DialogHeader>

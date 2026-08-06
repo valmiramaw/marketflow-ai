@@ -24,6 +24,8 @@ import {
   Zap,
   Cpu,
   FileBarChart,
+  Palette,
+  Brush,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -64,6 +66,16 @@ const navigation: NavSection[] = [
       { label: 'Content', href: '/dashboard/seo/content', icon: PenTool },
       { label: 'SEO-Audit', href: '/dashboard/seo/audit', icon: ClipboardCheck },
       { label: 'Analytics', href: '/dashboard/seo/analytics', icon: LineChart },
+    ],
+  },
+  {
+    label: 'Brand & Content',
+    icon: Palette,
+    href: '/dashboard/brand',
+    color: 'text-rose-500',
+    children: [
+      { label: 'Marken-Kit', href: '/dashboard/brand', icon: Brush },
+      { label: 'Content-Studio', href: '/dashboard/content-studio', icon: PenTool },
     ],
   },
   {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { aiComplete } from '@/lib/ai/router'
+import { getBrandContext, formatBrandSystemPrompt } from '@/lib/brand-context'
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,7 +41,11 @@ Anforderungen:
 Format: Markdown`,
         },
       ],
-      systemPrompt: 'Du bist ein SEO-Content-Experte. Schreibe hochwertige, suchmaschinenoptimierte Texte auf Deutsch.',
+      systemPrompt: await (async () => {
+        const brand = await getBrandContext()
+        const base = 'Du bist ein SEO-Content-Experte. Schreibe hochwertige, suchmaschinenoptimierte Texte auf Deutsch.'
+        return brand ? `${formatBrandSystemPrompt(brand)}\n\n${base}` : base
+      })(),
     })
 
     await prisma.contentPlan.update({
