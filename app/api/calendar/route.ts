@@ -5,7 +5,7 @@ export interface CalendarEvent {
   id: string
   title: string
   date: string // ISO date string
-  type: 'social' | 'followup' | 'email' | 'automation' | 'ads'
+  type: 'social' | 'followup' | 'email' | 'automation' | 'ads' | 'manual'
   status?: string
   meta?: Record<string, string>
 }
@@ -150,6 +150,27 @@ export async function GET(request: NextRequest) {
           meta: { platform: c.platform },
         })
       }
+    }
+
+    // 6. Manual Calendar Events
+    const manualEvents = await prisma.manualCalendarEvent.findMany({
+      where: { date: { gte: start, lte: end } },
+      select: { id: true, title: true, description: true, date: true, color: true, notifyAt: true, notified: true },
+    })
+    for (const me of manualEvents) {
+      events.push({
+        id: me.id,
+        title: me.title,
+        date: me.date.toISOString(),
+        type: 'manual',
+        status: me.notifyAt ? (me.notified ? 'benachrichtigt' : 'Erinnerung geplant') : undefined,
+        meta: {
+          color: me.color,
+          ...(me.description ? { description: me.description } : {}),
+          ...(me.notifyAt ? { notifyAt: me.notifyAt.toISOString() } : {}),
+          manual: 'true',
+        },
+      })
     }
 
     // Sort by date

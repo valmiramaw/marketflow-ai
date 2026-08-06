@@ -499,6 +499,21 @@ model WeeklyReport {
   @@map("weekly_reports")
 }
 
+model ManualCalendarEvent {
+  id          String    @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  date        DateTime
+  color       String    @default("sky") // sky, red, green, violet, rose
+  notifyAt    DateTime? @map("notify_at")
+  notified    Boolean   @default(false)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([date])
+  @@index([notifyAt, notified])
+  @@map("manual_calendar_events")
+}
+
 model NotificationPreference {
   id      String  @id @default(cuid())
   email   String
