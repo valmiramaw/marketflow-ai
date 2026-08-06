@@ -89,8 +89,8 @@ export class ClaudeProvider implements AiProviderClient {
         content: m.content,
       }))
 
-    // Bedrock Model ID für Claude Sonnet
-    const bedrockModel = 'anthropic.claude-sonnet-4-20250514-v1:0'
+    // Bedrock Model ID (EU Cross-Region Inference)
+    const bedrockModel = 'eu.anthropic.claude-sonnet-4-6'
 
     const response = await client.messages.create({
       model: bedrockModel,
