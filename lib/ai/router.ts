@@ -11,19 +11,34 @@ import { ClaudeProvider } from './providers/claude'
 import { OpenAiProvider } from './providers/openai'
 import { GeminiProvider } from './providers/gemini'
 
-async function getApiKeys(): Promise<Record<string, string | null>> {
+interface AppKeys {
+  anthropic: string | null
+  openai: string | null
+  gemini: string | null
+  awsAccessKeyId: string | null
+  awsSecretAccessKey: string | null
+  awsRegion: string | null
+}
+
+async function getApiKeys(): Promise<AppKeys> {
   try {
     const settings = await prisma.appSettings.findUnique({ where: { id: 'singleton' } })
     return {
       anthropic: settings?.anthropicKey || process.env.ANTHROPIC_API_KEY || null,
       openai: settings?.openaiKey || process.env.OPENAI_API_KEY || null,
       gemini: settings?.geminiKey || process.env.GEMINI_API_KEY || null,
+      awsAccessKeyId: settings?.awsAccessKeyId || process.env.AWS_ACCESS_KEY_ID || null,
+      awsSecretAccessKey: settings?.awsSecretAccessKey || process.env.AWS_SECRET_ACCESS_KEY || null,
+      awsRegion: settings?.awsRegion || process.env.AWS_REGION || null,
     }
   } catch {
     return {
       anthropic: process.env.ANTHROPIC_API_KEY || null,
       openai: process.env.OPENAI_API_KEY || null,
       gemini: process.env.GEMINI_API_KEY || null,
+      awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID || null,
+      awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || null,
+      awsRegion: process.env.AWS_REGION || null,
     }
   }
 }
@@ -31,7 +46,11 @@ async function getApiKeys(): Promise<Record<string, string | null>> {
 async function getProviders(): Promise<Record<AiProvider, AiProviderClient>> {
   const keys = await getApiKeys()
   return {
-    claude: new ClaudeProvider(keys.anthropic || undefined),
+    claude: new ClaudeProvider(keys.anthropic || undefined, {
+      accessKeyId: keys.awsAccessKeyId || undefined,
+      secretAccessKey: keys.awsSecretAccessKey || undefined,
+      region: keys.awsRegion || undefined,
+    }),
     openai: new OpenAiProvider(keys.openai || undefined),
     gemini: new GeminiProvider(keys.gemini || undefined),
   }

@@ -16,6 +16,10 @@ model AppSettings {
   anthropicKey    String?  @map("anthropic_key")
   openaiKey       String?  @map("openai_key")
   geminiKey       String?  @map("gemini_key")
+  // AWS Bedrock (Alternative für Claude)
+  awsAccessKeyId     String?  @map("aws_access_key_id")
+  awsSecretAccessKey String?  @map("aws_secret_access_key")
+  awsRegion          String?  @map("aws_region") // z.B. eu-central-1, us-east-1
   // Admin
   adminSecret     String?  @map("admin_secret")
   cronSecret      String?  @map("cron_secret")

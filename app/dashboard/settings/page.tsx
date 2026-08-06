@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Save, Eye, EyeOff, CheckCircle, XCircle, Key, Globe, Zap, Loader2, Unlink,
+  Save, Eye, EyeOff, CheckCircle, XCircle, Key, Globe, Zap, Loader2, Unlink, Cloud,
 } from 'lucide-react'
 
 export default function SettingsPage() {
@@ -25,11 +25,16 @@ function SettingsContent() {
     anthropicKey: '',
     openaiKey: '',
     geminiKey: '',
+    awsAccessKeyId: '',
+    awsSecretAccessKey: '',
+    awsRegion: '',
   })
   const [showKeys, setShowKeys] = useState({
     anthropic: false,
     openai: false,
     gemini: false,
+    awsAccessKey: false,
+    awsSecret: false,
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -43,7 +48,6 @@ function SettingsContent() {
   useEffect(() => {
     fetchSettings()
     fetchGoogleStatus()
-    // URL-Params prüfen
     const success = searchParams.get('success')
     const error = searchParams.get('error')
     if (success === 'google_connected') {
@@ -62,6 +66,9 @@ function SettingsContent() {
           anthropicKey: data.anthropicKey || '',
           openaiKey: data.openaiKey || '',
           geminiKey: data.geminiKey || '',
+          awsAccessKeyId: data.awsAccessKeyId || '',
+          awsSecretAccessKey: data.awsSecretAccessKey || '',
+          awsRegion: data.awsRegion || '',
         })
       }
     } catch { /* ignore */ }
@@ -105,6 +112,8 @@ function SettingsContent() {
     setNotification('Google-Verbindung getrennt.')
   }
 
+  const hasAwsBedrock = !!(settings.awsAccessKeyId && settings.awsSecretAccessKey)
+
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
@@ -126,6 +135,9 @@ function SettingsContent() {
           <TabsTrigger value="ai">
             <Zap className="w-4 h-4 mr-2" />KI-Provider
           </TabsTrigger>
+          <TabsTrigger value="aws">
+            <Cloud className="w-4 h-4 mr-2" />AWS Bedrock
+          </TabsTrigger>
           <TabsTrigger value="integrations">
             <Globe className="w-4 h-4 mr-2" />Integrationen
           </TabsTrigger>
@@ -140,10 +152,23 @@ function SettingsContent() {
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Key className="w-5 h-5" />Anthropic Claude
                   </CardTitle>
-                  <CardDescription>Strategie, Content, Reports</CardDescription>
+                  <CardDescription>
+                    Strategie, Content, Reports
+                    {hasAwsBedrock && (
+                      <span className="ml-2 text-blue-500">(Bedrock aktiv)</span>
+                    )}
+                  </CardDescription>
                 </div>
-                <Badge className={settings.anthropicKey ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}>
-                  {settings.anthropicKey ? <><CheckCircle className="w-3 h-3 mr-1" />Konfiguriert</> : <><XCircle className="w-3 h-3 mr-1" />Fehlt</>}
+                <Badge className={
+                  (settings.anthropicKey || hasAwsBedrock)
+                    ? 'bg-green-500/10 text-green-500'
+                    : 'bg-red-500/10 text-red-500'
+                }>
+                  {settings.anthropicKey || hasAwsBedrock ? (
+                    <><CheckCircle className="w-3 h-3 mr-1" />{hasAwsBedrock ? 'Bedrock' : 'API Key'}</>
+                  ) : (
+                    <><XCircle className="w-3 h-3 mr-1" />Fehlt</>
+                  )}
                 </Badge>
               </div>
             </CardHeader>
@@ -153,7 +178,7 @@ function SettingsContent() {
                   type={showKeys.anthropic ? 'text' : 'password'}
                   value={settings.anthropicKey}
                   onChange={(e) => setSettings((s) => ({ ...s, anthropicKey: e.target.value }))}
-                  placeholder="sk-ant-..."
+                  placeholder="sk-ant-... (optional wenn Bedrock aktiv)"
                 />
                 <Button variant="ghost" size="icon" onClick={() => setShowKeys((s) => ({ ...s, anthropic: !s.anthropic }))}>
                   {showKeys.anthropic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -227,6 +252,91 @@ function SettingsContent() {
               <><CheckCircle className="w-4 h-4 mr-2" />Gespeichert</>
             ) : (
               <><Save className="w-4 h-4 mr-2" />{saving ? 'Speichern...' : 'API-Keys speichern'}</>
+            )}
+          </Button>
+        </TabsContent>
+
+        <TabsContent value="aws" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Cloud className="w-5 h-5" />AWS Bedrock
+                  </CardTitle>
+                  <CardDescription>
+                    Claude über AWS Bedrock nutzen (Alternative zum direkten API-Key).
+                    Wenn konfiguriert, wird Bedrock bevorzugt.
+                  </CardDescription>
+                </div>
+                <Badge className={hasAwsBedrock ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}>
+                  {hasAwsBedrock ? <><CheckCircle className="w-3 h-3 mr-1" />Aktiv</> : 'Optional'}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Access Key ID */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Access Key ID</label>
+                <div className="flex gap-2">
+                  <Input
+                    type={showKeys.awsAccessKey ? 'text' : 'password'}
+                    value={settings.awsAccessKeyId}
+                    onChange={(e) => setSettings((s) => ({ ...s, awsAccessKeyId: e.target.value }))}
+                    placeholder="AKIA..."
+                  />
+                  <Button variant="ghost" size="icon" onClick={() => setShowKeys((s) => ({ ...s, awsAccessKey: !s.awsAccessKey }))}>
+                    {showKeys.awsAccessKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Secret Access Key */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Secret Access Key</label>
+                <div className="flex gap-2">
+                  <Input
+                    type={showKeys.awsSecret ? 'text' : 'password'}
+                    value={settings.awsSecretAccessKey}
+                    onChange={(e) => setSettings((s) => ({ ...s, awsSecretAccessKey: e.target.value }))}
+                    placeholder="Dein AWS Secret Key..."
+                  />
+                  <Button variant="ghost" size="icon" onClick={() => setShowKeys((s) => ({ ...s, awsSecret: !s.awsSecret }))}>
+                    {showKeys.awsSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Region */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Region</label>
+                <Input
+                  value={settings.awsRegion}
+                  onChange={(e) => setSettings((s) => ({ ...s, awsRegion: e.target.value }))}
+                  placeholder="eu-central-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  z.B. eu-central-1, us-east-1, eu-west-1
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20 text-sm text-muted-foreground">
+                <p className="font-medium text-foreground mb-1">So funktioniert&apos;s:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Bedrock wird bevorzugt wenn konfiguriert</li>
+                  <li>Fällt Bedrock aus, wird der direkte Anthropic API-Key genutzt</li>
+                  <li>Abrechnung läuft über dein AWS-Konto (pay-per-use)</li>
+                  <li>IAM-User braucht <code className="bg-muted px-1 rounded">bedrock:InvokeModel</code> Berechtigung</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button onClick={saveSettings} disabled={saving} className="w-full">
+            {saved ? (
+              <><CheckCircle className="w-4 h-4 mr-2" />Gespeichert</>
+            ) : (
+              <><Save className="w-4 h-4 mr-2" />{saving ? 'Speichern...' : 'AWS Bedrock speichern'}</>
             )}
           </Button>
         </TabsContent>
