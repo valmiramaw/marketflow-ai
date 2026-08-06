@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Save, Eye, EyeOff, CheckCircle, XCircle, Key, Globe, Zap, Loader2, Unlink, Cloud, Bell, Send,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export default function SettingsPage() {
   return (
@@ -51,11 +52,18 @@ function SettingsContent() {
     recipientCount: number
   }>({ configured: false, hasApiKey: false, hasRecipients: false, recipientCount: 0 })
   const [sendingTest, setSendingTest] = useState(false)
+  const [prefMatrix, setPrefMatrix] = useState<{
+    emails: string[]
+    modules: string[]
+    preferences: Record<string, Record<string, boolean>>
+  } | null>(null)
+  const [togglingPref, setTogglingPref] = useState<string | null>(null)
 
   useEffect(() => {
     fetchSettings()
     fetchGoogleStatus()
     fetchEmailStatus()
+    fetchPreferences()
     const success = searchParams.get('success')
     const error = searchParams.get('error')
     if (success === 'google_connected') {
@@ -142,6 +150,85 @@ function SettingsContent() {
     } finally {
       setSendingTest(false)
     }
+  }
+
+  async function fetchPreferences() {
+    try {
+      const res = await fetch('/api/notifications/preferences')
+      if (res.ok) setPrefMatrix(await res.json())
+    } catch { /* ignore */ }
+  }
+
+  async function togglePreference(email: string, module: string, currentValue: boolean) {
+    const key = `${email}-${module}`
+    setTogglingPref(key)
+    // Optimistic update
+    setPrefMatrix((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        preferences: {
+          ...prev.preferences,
+          [email]: { ...prev.preferences[email], [module]: !currentValue },
+        },
+      }
+    })
+    try {
+      const res = await fetch('/api/notifications/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, module, enabled: !currentValue }),
+      })
+      if (!res.ok) {
+        // Revert on error
+        setPrefMatrix((prev) => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            preferences: {
+              ...prev.preferences,
+              [email]: { ...prev.preferences[email], [module]: currentValue },
+            },
+          }
+        })
+      }
+    } catch {
+      // Revert
+      setPrefMatrix((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          preferences: {
+            ...prev.preferences,
+            [email]: { ...prev.preferences[email], [module]: currentValue },
+          },
+        }
+      })
+    } finally {
+      setTogglingPref(null)
+    }
+  }
+
+  const moduleLabels: Record<string, string> = {
+    sales: 'Sales',
+    seo: 'SEO',
+    competitors: 'Wettbewerber',
+    social: 'Social Media',
+    email: 'E-Mail',
+    automations: 'Automations',
+    reports: 'Berichte',
+    system: 'System',
+  }
+
+  const moduleColors: Record<string, string> = {
+    sales: 'bg-purple-500/10 text-purple-500',
+    seo: 'bg-green-500/10 text-green-500',
+    competitors: 'bg-teal-500/10 text-teal-500',
+    social: 'bg-pink-500/10 text-pink-500',
+    email: 'bg-blue-500/10 text-blue-500',
+    automations: 'bg-amber-500/10 text-amber-500',
+    reports: 'bg-indigo-500/10 text-indigo-500',
+    system: 'bg-gray-500/10 text-gray-500',
   }
 
   const hasAwsBedrock = !!(settings.awsAccessKeyId && settings.awsSecretAccessKey)
@@ -453,6 +540,64 @@ NOTIFICATION_EMAILS=du@email.com,kollegin@email.com`}
               </div>
             </CardContent>
           </Card>
+
+          {prefMatrix && prefMatrix.emails.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Modul-Benachrichtigungen</CardTitle>
+                <CardDescription>Steuere pro Modul, wer Benachrichtigungen erhält</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Modul</th>
+                        {prefMatrix.emails.map((email) => (
+                          <th key={email} className="text-center py-2 px-2 font-medium text-muted-foreground">
+                            <span className="text-xs">{email.split('@')[0]}</span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {prefMatrix.modules.map((mod) => (
+                        <tr key={mod} className="border-b border-border/50">
+                          <td className="py-2 pr-4">
+                            <Badge variant="secondary" className={moduleColors[mod] || ''}>
+                              {moduleLabels[mod] || mod}
+                            </Badge>
+                          </td>
+                          {prefMatrix.emails.map((email) => {
+                            const enabled = prefMatrix.preferences[email]?.[mod] ?? true
+                            const key = `${email}-${mod}`
+                            return (
+                              <td key={email} className="text-center py-2 px-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  disabled={togglingPref === key}
+                                  onClick={() => togglePreference(email, mod, enabled)}
+                                  className={cn(
+                                    'w-8 h-8 rounded-full p-0',
+                                    enabled
+                                      ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                  )}
+                                >
+                                  {enabled ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                                </Button>
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="integrations" className="space-y-4 mt-4">

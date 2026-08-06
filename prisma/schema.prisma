@@ -498,3 +498,14 @@ model WeeklyReport {
   @@unique([weekStart])
   @@map("weekly_reports")
 }
+
+model NotificationPreference {
+  id      String  @id @default(cuid())
+  email   String
+  module  String
+  enabled Boolean @default(true)
+
+  @@unique([email, module])
+  @@index([email])
+  @@map("notification_preferences")
+}

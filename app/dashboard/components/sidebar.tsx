@@ -29,6 +29,7 @@ import {
   Share2,
   Mail,
   Workflow,
+  CalendarDays,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -127,6 +128,12 @@ const navigation: NavSection[] = [
     icon: FileBarChart,
     href: '/dashboard/reports',
     color: 'text-indigo-500',
+  },
+  {
+    label: 'Kalender',
+    icon: CalendarDays,
+    href: '/dashboard/calendar',
+    color: 'text-sky-500',
   },
   {
     label: 'Einstellungen',

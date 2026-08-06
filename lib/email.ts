@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { prisma } from '@/lib/prisma'
 
 let resendClient: Resend | null = null
 
@@ -33,8 +34,21 @@ export async function sendNotification(payload: NotificationPayload): Promise<bo
   const resend = getResend()
   if (!resend) return false
 
-  const recipients = getNotificationEmails()
+  let recipients = getNotificationEmails()
   if (recipients.length === 0) return false
+
+  // Präferenz-Check: deaktivierte Empfänger rausfiltern (fail-open bei DB-Fehler)
+  try {
+    const disabled = await prisma.notificationPreference.findMany({
+      where: { email: { in: recipients }, module: payload.module, enabled: false },
+      select: { email: true },
+    })
+    const disabledSet = new Set(disabled.map((d) => d.email))
+    recipients = recipients.filter((e) => !disabledSet.has(e))
+    if (recipients.length === 0) return false
+  } catch {
+    // fail-open: bei DB-Fehler an alle senden
+  }
 
   const moduleLabels: Record<string, string> = {
     sales: 'Sales',
