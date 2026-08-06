@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Loader2, DollarSign, TrendingUp, PieChart, Sparkles, AlertTriangle } from 'lucide-react'
+import { InfoBox } from '../../components/info-box'
 
 interface BudgetCampaign {
   id: string
@@ -92,6 +93,10 @@ export default function BudgetsPage() {
           KI-Optimierung
         </Button>
       </div>
+
+      <InfoBox title="KI-Budget-Optimierung" variant="ai" storageKey="budgets-tip">
+        <p>Klicke <strong>KI-Optimierung</strong> oben rechts. Die KI analysiert alle Kampagnen und schlaegt vor, wie du dein Budget umverteilen kannst fuer maximalen ROAS. Du siehst Einsparpotenzial und konkrete Vorschlaege pro Kampagne.</p>
+      </InfoBox>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard

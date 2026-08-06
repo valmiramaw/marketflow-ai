@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Loader2, TrendingUp, TrendingDown, Minus, Trash2, Search } from 'lucide-react'
+import { InfoBox } from '../../components/info-box'
 import { cn } from '@/lib/utils'
 
 interface Keyword {
@@ -117,6 +118,10 @@ export default function KeywordsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <InfoBox title="Keyword-Tracking" storageKey="keywords-tip">
+        <p>Trage Keywords mit Domain ein, die du tracken willst. Bei verbundener Google Search Console werden Rankings automatisch aktualisiert. Gruene/rote Pfeile zeigen Ranking-Veraenderungen.</p>
+      </InfoBox>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

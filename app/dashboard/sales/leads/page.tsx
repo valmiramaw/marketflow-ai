@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Search, Sparkles } from 'lucide-react'
+import { InfoBox } from '../../components/info-box'
 
 interface Lead {
   id: string
@@ -161,6 +162,10 @@ export default function LeadsPage() {
           className="pl-10"
         />
       </div>
+
+      <InfoBox title="KI Lead-Scoring & Analyse" variant="ai" storageKey="leads-tip">
+        <p>Erstelle einen Lead und klicke auf <strong>Sparkles</strong>, um den KI-Score zu berechnen. Die KI bewertet den Lead (0-100) basierend auf Firmenname, Branche, Website und Deal-Wert. In der Lead-Detailseite kannst du ausserdem ein <strong>KI-Firmenprofile</strong> und ein <strong>Proposal</strong> generieren lassen.</p>
+      </InfoBox>
 
       {/* Leads Table */}
       <Card>

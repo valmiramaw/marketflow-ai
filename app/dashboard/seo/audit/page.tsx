@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Search, AlertTriangle, AlertCircle, Info, CheckCircle } from 'lucide-react'
+import { InfoBox } from '../../components/info-box'
 import { cn } from '@/lib/utils'
 
 interface SeoAudit {
@@ -67,6 +68,10 @@ export default function AuditPage() {
         <h1 className="text-3xl font-bold">SEO-Audit</h1>
         <p className="text-muted-foreground mt-1">KI-gestützte technische SEO-Analyse</p>
       </div>
+
+      <InfoBox title="KI SEO-Audit" variant="ai" storageKey="audit-tip">
+        <p>Gib eine Domain ein und klicke <strong>Audit starten</strong>. Die KI analysiert: technische SEO-Probleme (kritisch/warnung/info), gibt einen Score (0-100) und schlaegt konkrete Verbesserungen vor. Jeder Audit wird gespeichert, so kannst du Fortschritte ueber die Zeit verfolgen.</p>
+      </InfoBox>
 
       {/* Audit starten */}
       <Card>

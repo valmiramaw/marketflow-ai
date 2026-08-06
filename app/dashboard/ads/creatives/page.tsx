@@ -10,6 +10,7 @@ import {
   Plus, Loader2, Trash2, Sparkles, Image, Type, Video, LayoutGrid,
   ExternalLink,
 } from 'lucide-react'
+import { InfoBox } from '../../components/info-box'
 
 interface Creative {
   id: string
@@ -149,6 +150,10 @@ export default function CreativesPage() {
           <Plus className="w-4 h-4 mr-2" />Neues Creative
         </Button>
       </div>
+
+      <InfoBox title="Gemini Vision - Bild-Analyse" variant="ai" storageKey="creatives-tip">
+        <p>Lade Creatives mit einer <strong>Bild-URL</strong> hoch. Google Gemini analysiert das Bild automatisch und bewertet: visuelle Qualitaet, CTA-Staerke, Text-Lesbarkeit und gibt einen Score (0-100). Klicke <strong>Sparkles</strong> fuer eine erneute Analyse.</p>
+      </InfoBox>
 
       {creatives.length === 0 ? (
         <Card>

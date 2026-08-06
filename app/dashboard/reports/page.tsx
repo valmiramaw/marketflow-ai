@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Sparkles, FileText, ChevronDown, ChevronUp } from 'lucide-react'
+import { InfoBox } from '../components/info-box'
 
 interface Report {
   id: string
@@ -58,6 +59,10 @@ export default function ReportsPage() {
           )}
         </Button>
       </div>
+
+      <InfoBox title="KI-Wochenberichte" variant="ai" storageKey="reports-tip">
+        <p>Die KI erstellt einen umfassenden Wochenbericht ueber alle 3 Module (Ads, SEO, Sales). Klicke <strong>Neuen Bericht erstellen</strong> oder warte auf den automatischen Bericht jeden <strong>Montag um 09:00</strong>. Der Bericht enthaelt: Performance-Zusammenfassung, Highlights, Probleme und konkrete Handlungsempfehlungen.</p>
+      </InfoBox>
 
       {reports.length === 0 ? (
         <Card>

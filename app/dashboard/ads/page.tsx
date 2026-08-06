@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Loader2, Megaphone, TrendingUp, MousePointerClick, Target, DollarSign } from 'lucide-react'
+import { InfoBox } from '../components/info-box'
 
 interface Campaign {
   id: string
@@ -57,6 +58,17 @@ export default function AdsPage() {
         <h1 className="text-3xl font-bold">Performance Marketing</h1>
         <p className="text-muted-foreground mt-1">Google Ads & Meta Ads Kampagnen</p>
       </div>
+
+      <InfoBox title="Performance Marketing - So funktioniert's" variant="ai" storageKey="ads-intro">
+        <p>Verwalte deine Google Ads & Meta Ads Kampagnen mit KI-Unterstützung.</p>
+        <ul>
+          <li><strong>Kampagnen</strong> - Erstelle und verwalte Kampagnen, die KI analysiert Performance und gibt dir einen Score (0-100)</li>
+          <li><strong>Budgets</strong> - Sehe Budget-Auslastung pro Kampagne, lass die KI Optimierungsvorschläge machen</li>
+          <li><strong>A/B Tests</strong> - Vergleiche zwei Varianten, die KI wertet aus welche besser performt</li>
+          <li><strong>Werbemittel</strong> - Lade Creatives hoch, Gemini Vision analysiert Bilder automatisch</li>
+        </ul>
+        <p className="mt-2">Google Ads Sync: Verbinde Google unter Einstellungen, dann werden Kampagnen-Daten taeglich um 06:00 automatisch synchronisiert.</p>
+      </InfoBox>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard

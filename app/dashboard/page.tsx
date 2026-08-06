@@ -11,6 +11,7 @@ import {
   MousePointerClick, UserPlus, Loader2, Sparkles, Target,
   Cpu, AlertCircle, CheckCircle, XCircle,
 } from 'lucide-react'
+import { InfoBox } from './components/info-box'
 
 interface DashboardData {
   ads: {
@@ -93,6 +94,18 @@ export default function DashboardHome() {
           <Sparkles className="w-4 h-4 mr-2" />Wochenbericht
         </Button>
       </div>
+
+      <InfoBox title="Willkommen bei MarketFlow AI" variant="ai" storageKey="dashboard-welcome">
+        <p>Dein KI-gesteuertes Marketing- & Sales-Cockpit. Hier siehst du alle KPIs auf einen Blick.</p>
+        <ul>
+          <li><strong>Performance Ads</strong> - Google/Meta Kampagnen verwalten, KI-Budgetoptimierung</li>
+          <li><strong>SEO & Analytics</strong> - Keywords tracken, Content planen, SEO-Audits mit KI</li>
+          <li><strong>Sales Intelligence</strong> - Leads verwalten, KI-Scoring, Pipeline & Proposals</li>
+          <li><strong>KI-Assistent</strong> - Frag die KI zu allen Marketing- & Sales-Themen</li>
+          <li><strong>Multi-KI</strong> - Claude, GPT-4o und Gemini arbeiten zusammen</li>
+        </ul>
+        <p className="mt-2">Klicke auf ein Modul-Karte unten, um direkt einzusteigen.</p>
+      </InfoBox>
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

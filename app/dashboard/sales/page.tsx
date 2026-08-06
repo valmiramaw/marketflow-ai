@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Loader2, Users, DollarSign, TrendingUp, Target, CheckCircle, Clock } from 'lucide-react'
+import { InfoBox } from '../components/info-box'
 
 interface Lead {
   id: string
@@ -90,6 +91,17 @@ export default function SalesPage() {
         <h1 className="text-3xl font-bold">Sales Intelligence</h1>
         <p className="text-muted-foreground mt-1">KI-gestütztes Lead-Management & Pipeline</p>
       </div>
+
+      <InfoBox title="Sales Intelligence - So funktioniert's" variant="ai" storageKey="sales-intro">
+        <p>KI-gestuetztes Lead-Management von der Akquise bis zum Abschluss.</p>
+        <ul>
+          <li><strong>Leads</strong> - Erstelle Leads manuell. Die KI bewertet jeden Lead automatisch mit einem Score (0-100) basierend auf Firmeninfos und Potenzial</li>
+          <li><strong>Pipeline</strong> - Kanban-Board: Ziehe Leads durch die Phasen (Neu → Kontaktiert → Qualifiziert → Proposal → Gewonnen/Verloren)</li>
+          <li><strong>Proposals</strong> - Lass die KI ein massgeschneidertes Angebot generieren, basierend auf dem Lead-Profil</li>
+          <li><strong>Follow-ups</strong> - Plane Erinnerungen (E-Mail, Anruf, Meeting). Faellige Follow-ups erscheinen hier auf dem Dashboard</li>
+          <li><strong>Forecasting</strong> - KI-Umsatzprognose basierend auf deiner Pipeline und historischen Win-Rates</li>
+        </ul>
+      </InfoBox>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard title="Pipeline-Wert" value={`€${totalValue.toLocaleString('de-DE')}`} icon={<DollarSign className="w-5 h-5" />} />

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Loader2, Globe, TrendingUp, FileText, AlertCircle } from 'lucide-react'
+import { InfoBox } from '../components/info-box'
 
 interface Keyword {
   id: string
@@ -64,6 +65,17 @@ export default function SeoPage() {
         <h1 className="text-3xl font-bold">SEO & Analytics</h1>
         <p className="text-muted-foreground mt-1">Search Console, GA4 & Keyword-Tracking</p>
       </div>
+
+      <InfoBox title="SEO & Analytics - So funktioniert's" variant="ai" storageKey="seo-intro">
+        <p>Tracke deine Rankings, plane Content und analysiere Traffic mit KI.</p>
+        <ul>
+          <li><strong>Keywords</strong> - Trage Keywords ein, die du tracken willst. Rankings werden automatisch aktualisiert wenn Google Search Console verbunden ist</li>
+          <li><strong>Content</strong> - Plane Blog-Posts, Landing Pages etc. Die KI generiert Entwuerfe basierend auf deinem Keyword</li>
+          <li><strong>SEO-Audit</strong> - Lass die KI deine Domain analysieren: technische Probleme, Core Web Vitals, Verbesserungsvorschläge</li>
+          <li><strong>Analytics</strong> - GA4-Traffic-Daten: Sessions, Nutzer, Bounce-Rate, Top-Seiten</li>
+        </ul>
+        <p className="mt-2">Verbinde Google unter Einstellungen fuer automatische Daten-Synchronisierung (taeglich 07:00).</p>
+      </InfoBox>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard title="Getrackte Keywords" value={String(totalKeywords)} icon={<Globe className="w-5 h-5" />} />

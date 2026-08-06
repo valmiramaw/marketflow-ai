@@ -10,6 +10,7 @@ import {
   Plus, Loader2, Trash2, Play, Pause, Sparkles, Search,
   TrendingUp, TrendingDown, Minus,
 } from 'lucide-react'
+import { InfoBox } from '../../components/info-box'
 
 interface Campaign {
   id: string
@@ -142,6 +143,10 @@ export default function CampaignsPage() {
           <Plus className="w-4 h-4 mr-2" />Neue Kampagne
         </Button>
       </div>
+
+      <InfoBox title="KI-Kampagnenanalyse" variant="ai" storageKey="campaigns-tip">
+        <p>Klicke auf das <strong>Sparkles-Icon</strong> bei einer Kampagne, um eine KI-Analyse zu starten. Du bekommst: Performance-Score, Trend-Bewertung, konkrete Insights und Budget-Empfehlungen.</p>
+      </InfoBox>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

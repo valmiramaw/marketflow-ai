@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Loader2, Trash2, Sparkles, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { InfoBox } from '../../components/info-box'
 
 interface AbTest {
   id: string
@@ -131,6 +132,10 @@ export default function AbTestsPage() {
           <Plus className="w-4 h-4 mr-2" />Neuer Test
         </Button>
       </div>
+
+      <InfoBox title="A/B Tests mit KI-Auswertung" variant="ai" storageKey="abtests-tip">
+        <p>Erstelle zwei Varianten (A/B) fuer eine Kampagne. Die KI analysiert welche Variante besser performt und gibt dir eine Empfehlung mit Konfidenz-Wert. Klicke auf <strong>Sparkles</strong> fuer die KI-Analyse.</p>
+      </InfoBox>
 
       {tests.length === 0 ? (
         <Card>

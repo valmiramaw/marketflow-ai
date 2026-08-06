@@ -5,6 +5,7 @@ import { KpiCard } from '../components/kpi-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Cpu, Zap, Clock, AlertTriangle } from 'lucide-react'
+import { InfoBox } from '../components/info-box'
 
 interface UsageData {
   summary: {
@@ -116,6 +117,16 @@ export default function AiUsagePage() {
           ))}
         </div>
       </div>
+
+      <InfoBox title="Multi-KI System" storageKey="ai-usage-info">
+        <p>MarketFlow nutzt 3 KI-Provider, automatisch geroutet nach Aufgabentyp:</p>
+        <ul>
+          <li><strong>Claude (Bedrock)</strong> - Strategie, Content, Reports, Chat, Proposals</li>
+          <li><strong>GPT-4o</strong> - Lead-Scoring, Daten-Extraktion, JSON, Keyword-Analyse</li>
+          <li><strong>Gemini</strong> - Bild-Analyse (Vision), Bulk-Verarbeitung, Creative-Reviews</li>
+        </ul>
+        <p className="mt-1">Automatischer Fallback: Faellt ein Provider aus, uebernimmt der naechste.</p>
+      </InfoBox>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard title="KI-Aufrufe" value={String(summary.totalCalls)} icon={<Zap className="w-5 h-5" />} />

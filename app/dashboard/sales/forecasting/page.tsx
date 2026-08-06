@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { KpiCard } from '../../components/kpi-card'
 import { TrendingUp, DollarSign, Target, Calendar, Loader2, Sparkles, AlertTriangle } from 'lucide-react'
+import { InfoBox } from '../../components/info-box'
 
 interface ForecastData {
   summary: {
@@ -78,6 +79,10 @@ export default function ForecastingPage() {
           KI-Prognose erstellen
         </Button>
       </div>
+
+      <InfoBox title="KI-Umsatzprognose" variant="ai" storageKey="forecasting-tip">
+        <p>Klicke <strong>KI-Prognose erstellen</strong> (ab 3 gewonnenen Deals). Die KI analysiert deine Pipeline, historische Win-Rate und Deal-Werte und erstellt eine Quartalsprognose mit: erwarteter Umsatz, Abschlusswahrscheinlichkeiten, Top-Opportunities, Risiken und Handlungsempfehlungen.</p>
+      </InfoBox>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard

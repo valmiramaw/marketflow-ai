@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Loader2, Sparkles, PenLine, Trash2, Eye } from 'lucide-react'
+import { InfoBox } from '../../components/info-box'
 
 interface ContentPlan {
   id: string
@@ -149,6 +150,10 @@ export default function ContentPage() {
           )
         })}
       </div>
+
+      <InfoBox title="KI-Content-Generator" variant="ai" storageKey="content-tip">
+        <p>Erstelle einen Content-Plan mit Titel und Keyword. Klicke dann <strong>KI-Entwurf</strong> (Sparkles) - die KI generiert einen vollstaendigen Artikelentwurf mit SEO-Optimierung. Phasen: Idee → Geplant → In Arbeit → Veroeffentlicht.</p>
+      </InfoBox>
 
       {plans.length === 0 ? (
         <Card>
