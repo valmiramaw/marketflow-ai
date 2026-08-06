@@ -352,8 +352,94 @@ model ProductContent {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
+  socialPosts      SocialPost[]
+
   @@index([contentType, status])
   @@map("product_contents")
+}
+
+// ============================================================
+// MARKT-INTELLIGENCE & KANÄLE
+// ============================================================
+
+model Competitor {
+  id             String    @id @default(cuid())
+  name           String
+  website        String?
+  description    String?   @db.Text
+  industry       String?
+  notes          String?   @db.Text
+  aiAnalysis     String?   @map("ai_analysis") @db.Text
+  lastAnalyzedAt DateTime? @map("last_analyzed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([industry])
+  @@map("competitors")
+}
+
+model SocialPost {
+  id               String   @id @default(cuid())
+  productContentId String?  @map("product_content_id")
+  platform         String   // instagram, tiktok, linkedin, facebook, twitter
+  content          String   @db.Text
+  hashtags         String?
+  mediaUrl         String?  @map("media_url")
+  scheduledAt      DateTime? @map("scheduled_at")
+  publishedAt      DateTime? @map("published_at")
+  status           String   @default("draft") // draft, scheduled, published
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  productContent   ProductContent? @relation(fields: [productContentId], references: [id], onDelete: SetNull)
+
+  @@index([platform, status])
+  @@index([scheduledAt])
+  @@map("social_posts")
+}
+
+model EmailCampaign {
+  id             String    @id @default(cuid())
+  name           String
+  subject        String
+  content        String    @db.Text
+  recipientCount Int       @default(0) @map("recipient_count")
+  status         String    @default("draft") // draft, scheduled, sent
+  sentAt         DateTime? @map("sent_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("email_campaigns")
+}
+
+model EmailContact {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  tags      Json     @default("[]") // String[]
+  status    String   @default("active") // active, unsubscribed
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("email_contacts")
+}
+
+model Automation {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  triggerType   String    @map("trigger_type") // lead_created, lead_score_high, keyword_dropped, content_published, weekly_schedule
+  triggerConfig Json      @map("trigger_config")
+  actions       Json      // Array: [{type, config}]
+  enabled       Boolean   @default(false)
+  lastRunAt     DateTime? @map("last_run_at")
+  runCount      Int       @default(0) @map("run_count")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([enabled, triggerType])
+  @@map("automations")
 }
 
 // ============================================================

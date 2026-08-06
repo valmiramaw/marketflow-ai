@@ -9,6 +9,9 @@ export type TaskType =
   | 'seo_content'
   | 'brand_content'
   | 'content_suggest'
+  | 'competitor_analysis'
+  | 'social_generate'
+  | 'email_generate'
   // OpenAI - Strukturierte Daten
   | 'lead_scoring'
   | 'data_extraction'
@@ -76,6 +79,9 @@ export const TASK_PROVIDER_MAP: Record<TaskType, AiProvider> = {
   seo_content: 'claude',
   brand_content: 'claude',
   content_suggest: 'claude',
+  competitor_analysis: 'claude',
+  social_generate: 'claude',
+  email_generate: 'claude',
   // OpenAI
   lead_scoring: 'openai',
   data_extraction: 'openai',

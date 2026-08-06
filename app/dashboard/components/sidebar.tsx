@@ -26,6 +26,9 @@ import {
   FileBarChart,
   Palette,
   Brush,
+  Share2,
+  Mail,
+  Workflow,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -79,6 +82,17 @@ const navigation: NavSection[] = [
     ],
   },
   {
+    label: 'Markt & Kanäle',
+    icon: Globe,
+    href: '/dashboard/competitors',
+    color: 'text-teal-500',
+    children: [
+      { label: 'Wettbewerber', href: '/dashboard/competitors', icon: Search },
+      { label: 'Social Media', href: '/dashboard/social', icon: Share2 },
+      { label: 'E-Mail', href: '/dashboard/email', icon: Mail },
+    ],
+  },
+  {
     label: 'Sales',
     icon: Users,
     href: '/dashboard/sales',
@@ -89,6 +103,12 @@ const navigation: NavSection[] = [
       { label: 'Proposals', href: '/dashboard/sales/proposals', icon: FileSignature },
       { label: 'Forecasting', href: '/dashboard/sales/forecasting', icon: TrendingUp },
     ],
+  },
+  {
+    label: 'Automatisierungen',
+    icon: Workflow,
+    href: '/dashboard/automations',
+    color: 'text-amber-500',
   },
   {
     label: 'KI-Assistent',
