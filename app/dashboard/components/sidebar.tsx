@@ -22,6 +22,8 @@ import {
   FileSignature,
   ChevronDown,
   Zap,
+  Cpu,
+  FileBarChart,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -81,6 +83,18 @@ const navigation: NavSection[] = [
     icon: MessageSquare,
     href: '/dashboard/ai-chat',
     color: 'text-cyan-500',
+  },
+  {
+    label: 'KI-Nutzung',
+    icon: Cpu,
+    href: '/dashboard/ai-usage',
+    color: 'text-cyan-500',
+  },
+  {
+    label: 'Wochenberichte',
+    icon: FileBarChart,
+    href: '/dashboard/reports',
+    color: 'text-indigo-500',
   },
   {
     label: 'Einstellungen',
