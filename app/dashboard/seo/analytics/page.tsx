@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { KpiCard } from '../../components/kpi-card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Users, Eye, Clock, ArrowDownUp } from 'lucide-react'
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 
 interface Snapshot {
   id: string
@@ -125,6 +126,27 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Traffic-Chart */}
+      {snapshots.length > 2 && (
+        <Card>
+          <CardHeader><CardTitle>Traffic-Verlauf</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={snapshots.slice(0, 30).reverse()}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => new Date(v).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString('de-DE')} />
+                <Legend />
+                <Area type="monotone" dataKey="sessions" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.1} strokeWidth={2} name="Sessions" />
+                <Area type="monotone" dataKey="pageviews" stroke="#22c55e" fill="#22c55e" fillOpacity={0.1} strokeWidth={2} name="Pageviews" />
+                <Area type="monotone" dataKey="users" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.1} strokeWidth={2} name="Users" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Verlauf */}
       {snapshots.length > 1 && (

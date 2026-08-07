@@ -143,7 +143,7 @@ const navigation: NavSection[] = [
   },
 ]
 
-export function Sidebar() {
+export function Sidebar({ mobile, onNavigate }: { mobile?: boolean; onNavigate?: () => void } = {}) {
   const pathname = usePathname()
   const [expanded, setExpanded] = useState<string[]>([])
 
@@ -159,7 +159,10 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex md:flex-col md:w-64 border-r border-border bg-card h-screen sticky top-0">
+    <aside className={cn(
+      'flex flex-col border-r border-border bg-card h-screen sticky top-0',
+      mobile ? 'w-full' : 'hidden md:flex md:w-64'
+    )}>
       {/* Logo */}
       <div className="flex items-center gap-2 px-6 py-5 border-b border-border">
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
@@ -180,6 +183,7 @@ export function Sidebar() {
               <div className="flex items-center">
                 <Link
                   href={item.href}
+                  onClick={onNavigate}
                   className={cn(
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex-1',
                     active
@@ -210,6 +214,7 @@ export function Sidebar() {
                       <Link
                         key={child.href}
                         href={child.href}
+                        onClick={onNavigate}
                         className={cn(
                           'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors',
                           childActive

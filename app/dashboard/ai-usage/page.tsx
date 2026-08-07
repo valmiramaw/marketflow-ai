@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Cpu, Zap, Clock, AlertTriangle } from 'lucide-react'
 import { InfoBox } from '../components/info-box'
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
 interface UsageData {
   summary: {
@@ -198,33 +199,55 @@ export default function AiUsagePage() {
         </Card>
       </div>
 
-      {/* Tägliche Nutzung */}
+      {/* Charts */}
       {data?.daily && data.daily.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader><CardTitle>Tägliche Aufrufe</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={data.daily.slice().reverse()}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => new Date(v).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString('de-DE')} />
+                  <Area type="monotone" dataKey="calls" stroke="#0891b2" fill="#0891b2" fillOpacity={0.15} strokeWidth={2} name="Aufrufe" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>Token-Verbrauch</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <AreaChart data={data.daily.slice().reverse()}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => new Date(v).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : String(v)} />
+                  <Tooltip labelFormatter={(v) => new Date(String(v)).toLocaleDateString('de-DE')} />
+                  <Area type="monotone" dataKey="tokens" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} name="Tokens" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Task-Verteilung Pie */}
+      {data?.byTaskType && data.byTaskType.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>Tägliche Nutzung</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Aufgaben-Verteilung (Calls)</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-1">
-              {data.daily.map((d) => {
-                const maxCalls = Math.max(...data.daily.map((x) => x.calls))
-                const barWidth = maxCalls > 0 ? (d.calls / maxCalls) * 100 : 0
-                return (
-                  <div key={d.date} className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground w-20 shrink-0">
-                      {new Date(d.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
-                    </span>
-                    <div className="flex-1 bg-muted rounded-full h-4">
-                      <div
-                        className="h-4 rounded-full bg-cyan-500/70"
-                        style={{ width: `${barWidth}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-muted-foreground w-16 text-right">{d.calls} Calls</span>
-                  </div>
-                )
-              })}
-            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={data.byTaskType.filter(t => t.calls > 0)} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fontSize: 11 }} />
+                <YAxis dataKey="taskType" type="category" tick={{ fontSize: 11 }} width={120} tickFormatter={(v) => taskTypeLabels[v] || v} />
+                <Tooltip />
+                <Bar dataKey="calls" fill="#0891b2" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       )}

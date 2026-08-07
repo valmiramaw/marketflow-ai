@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { KpiCard } from '../../components/kpi-card'
 import { TrendingUp, DollarSign, Target, Calendar, Loader2, Sparkles, AlertTriangle } from 'lucide-react'
 import { InfoBox } from '../../components/info-box'
+import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 
 interface ForecastData {
   summary: {
@@ -146,7 +147,7 @@ export default function ForecastingPage() {
           <CardContent>
             {!data?.monthlyTrend?.length ? (
               <p className="text-muted-foreground text-center py-8 text-sm">Noch nicht genug Daten.</p>
-            ) : (
+            ) : data.monthlyTrend.length < 2 ? (
               <div className="space-y-2">
                 {data.monthlyTrend.map((m) => (
                   <div key={m.month} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
@@ -158,6 +159,19 @@ export default function ForecastingPage() {
                   </div>
                 ))}
               </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <ComposedChart data={data.monthlyTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(v: number) => `${(v/1000).toFixed(0)}k€`} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="value" fill="#8b5cf6" fillOpacity={0.7} radius={[4, 4, 0, 0]} name="Umsatz" />
+                  <Line yAxisId="right" type="monotone" dataKey="count" stroke="#22c55e" strokeWidth={2} name="Deals" />
+                </ComposedChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>

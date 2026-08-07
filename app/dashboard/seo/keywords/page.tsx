@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Plus, Loader2, TrendingUp, TrendingDown, Minus, Trash2, Search } from 'lucide-react'
 import { InfoBox } from '../../components/info-box'
 import { cn } from '@/lib/utils'
+import { ResponsiveContainer, LineChart, Line } from 'recharts'
 
 interface Keyword {
   id: string
@@ -145,19 +146,20 @@ export default function KeywordsPage() {
                   <th className="text-right p-4 font-medium text-muted-foreground">Änderung</th>
                   <th className="text-right p-4 font-medium text-muted-foreground">Suchvolumen</th>
                   <th className="text-right p-4 font-medium text-muted-foreground">Schwierigkeit</th>
+                  <th className="text-center p-4 font-medium text-muted-foreground">Verlauf</th>
                   <th className="text-right p-4 font-medium text-muted-foreground"></th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto" />
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
                       {keywords.length === 0 ? 'Noch keine Keywords. Füge dein erstes Keyword hinzu.' : 'Keine Ergebnisse.'}
                     </td>
                   </tr>
@@ -202,6 +204,19 @@ export default function KeywordsPage() {
                           {kw.difficulty !== null ? (
                             <Badge variant="outline">{kw.difficulty}/100</Badge>
                           ) : '—'}
+                        </td>
+                        <td className="p-4">
+                          {kw.history && kw.history.length > 2 ? (
+                            <div className="w-20 h-8 mx-auto">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={kw.history.slice(0, 14).reverse().map(h => ({ rank: h.rank ? -h.rank : null }))}>
+                                  <Line type="monotone" dataKey="rank" stroke={change && change > 0 ? '#22c55e' : change && change < 0 ? '#ef4444' : '#6b7280'} strokeWidth={1.5} dot={false} connectNulls />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground block text-center">—</span>
+                          )}
                         </td>
                         <td className="p-4 text-right">
                           <Button variant="ghost" size="icon" onClick={() => deleteKeyword(kw.id)}>
