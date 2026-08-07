@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Loader2, Search, AlertTriangle, AlertCircle, Info, CheckCircle } from 'lucide-react'
 import { InfoBox } from '../../components/info-box'
 import { cn } from '@/lib/utils'
+import { useToast } from '../../components/toast'
 
 interface SeoAudit {
   id: string
@@ -25,6 +26,7 @@ export default function AuditPage() {
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(false)
   const [domain, setDomain] = useState('')
+  const { toast } = useToast()
 
   useEffect(() => { fetchAudits() }, [])
 
@@ -32,7 +34,9 @@ export default function AuditPage() {
     try {
       const res = await fetch('/api/seo/audit')
       if (res.ok) setAudits(await res.json())
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch {
+      toast('Audits konnten nicht geladen werden.', 'error')
+    } finally { setLoading(false) }
   }
 
   async function runAudit(e: React.FormEvent) {
@@ -48,7 +52,12 @@ export default function AuditPage() {
       if (res.ok) {
         setDomain('')
         fetchAudits()
+        toast('Audit abgeschlossen!', 'success')
+      } else {
+        toast('Audit konnte nicht durchgeführt werden.', 'error')
       }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
     } finally { setRunning(false) }
   }
 

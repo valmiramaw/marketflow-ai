@@ -14,6 +14,7 @@ import {
   MessageSquare, PhoneCall, Users, PenLine,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useToast } from '../../../components/toast'
 
 interface Lead {
   id: string
@@ -90,6 +91,7 @@ export default function LeadDetailPage() {
   const [showFollowUpForm, setShowFollowUpForm] = useState(false)
   const [showActivityForm, setShowActivityForm] = useState(false)
   const [showProposal, setShowProposal] = useState<string | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchLead()
@@ -99,25 +101,39 @@ export default function LeadDetailPage() {
     try {
       const res = await fetch(`/api/sales/leads/${id}`)
       if (res.ok) setLead(await res.json())
-    } catch { /* ignore */ } finally {
+    } catch {
+      toast('Lead konnte nicht geladen werden.', 'error')
+    } finally {
       setLoading(false)
     }
   }
 
   async function updateStatus(newStatus: string) {
-    const res = await fetch(`/api/sales/leads/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    })
-    if (res.ok) fetchLead()
+    try {
+      const res = await fetch(`/api/sales/leads/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (res.ok) fetchLead()
+      else toast('Status konnte nicht geändert werden.', 'error')
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   async function runScoring() {
     setScoring(true)
     try {
-      await fetch(`/api/sales/leads/${id}/score`, { method: 'POST' })
-      fetchLead()
+      const res = await fetch(`/api/sales/leads/${id}/score`, { method: 'POST' })
+      if (res.ok) {
+        fetchLead()
+        toast('KI-Scoring abgeschlossen!', 'success')
+      } else {
+        toast('Scoring konnte nicht durchgeführt werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
     } finally {
       setScoring(false)
     }
@@ -126,54 +142,82 @@ export default function LeadDetailPage() {
   async function generateProposal() {
     setGeneratingProposal(true)
     try {
-      await fetch('/api/sales/proposals/generate', {
+      const res = await fetch('/api/sales/proposals/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leadId: id }),
       })
-      fetchLead()
+      if (res.ok) {
+        fetchLead()
+        toast('Proposal generiert!', 'success')
+      } else {
+        toast('Proposal konnte nicht generiert werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
     } finally {
       setGeneratingProposal(false)
     }
   }
 
   async function createFollowUp(formData: FormData) {
-    await fetch('/api/sales/follow-ups', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        leadId: id,
-        type: formData.get('type'),
-        subject: formData.get('subject'),
-        dueDate: formData.get('dueDate'),
-        description: formData.get('description') || null,
-      }),
-    })
-    setShowFollowUpForm(false)
-    fetchLead()
+    try {
+      const res = await fetch('/api/sales/follow-ups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leadId: id,
+          type: formData.get('type'),
+          subject: formData.get('subject'),
+          dueDate: formData.get('dueDate'),
+          description: formData.get('description') || null,
+        }),
+      })
+      if (res.ok) {
+        setShowFollowUpForm(false)
+        fetchLead()
+      } else {
+        toast('Follow-up konnte nicht erstellt werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   async function completeFollowUp(followUpId: string) {
-    await fetch('/api/sales/follow-ups', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: followUpId, completed: true }),
-    })
-    fetchLead()
+    try {
+      const res = await fetch('/api/sales/follow-ups', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: followUpId, completed: true }),
+      })
+      if (res.ok) fetchLead()
+      else toast('Follow-up konnte nicht abgeschlossen werden.', 'error')
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   async function addActivity(formData: FormData) {
-    await fetch(`/api/sales/leads/${id}/activities`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: formData.get('type'),
-        subject: formData.get('subject'),
-        content: formData.get('content') || null,
-      }),
-    })
-    setShowActivityForm(false)
-    fetchLead()
+    try {
+      const res = await fetch(`/api/sales/leads/${id}/activities`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: formData.get('type'),
+          subject: formData.get('subject'),
+          content: formData.get('content') || null,
+        }),
+      })
+      if (res.ok) {
+        setShowActivityForm(false)
+        fetchLead()
+      } else {
+        toast('Aktivität konnte nicht hinzugefügt werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   if (loading) {

@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Loader2, Sparkles, PenLine, Trash2, Eye, Lightbulb } from 'lucide-react'
 import { InfoBox } from '../../components/info-box'
+import { useToast } from '../../components/toast'
 
 interface ContentSuggestion {
   title: string
@@ -46,6 +47,7 @@ export default function ContentPage() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestions, setSuggestions] = useState<ContentSuggestion[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => { fetchPlans() }, [])
 
@@ -53,48 +55,77 @@ export default function ContentPage() {
     try {
       const res = await fetch('/api/seo/content')
       if (res.ok) setPlans(await res.json())
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch {
+      toast('Content-Pläne konnten nicht geladen werden.', 'error')
+    } finally { setLoading(false) }
   }
 
   async function createPlan(formData: FormData) {
-    const res = await fetch('/api/seo/content', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: formData.get('title'),
-        keyword: formData.get('keyword') || null,
-        contentType: formData.get('contentType') || 'blog',
-        outline: formData.get('outline') || null,
-        publishDate: formData.get('publishDate') || null,
-      }),
-    })
-    if (res.ok) { setShowNew(false); fetchPlans() }
+    try {
+      const res = await fetch('/api/seo/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.get('title'),
+          keyword: formData.get('keyword') || null,
+          contentType: formData.get('contentType') || 'blog',
+          outline: formData.get('outline') || null,
+          publishDate: formData.get('publishDate') || null,
+        }),
+      })
+      if (res.ok) {
+        setShowNew(false)
+        fetchPlans()
+        toast('Content-Plan erstellt!', 'success')
+      } else {
+        toast('Plan konnte nicht erstellt werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   async function generateContent(planId: string) {
     setGenerating(planId)
     try {
-      await fetch('/api/seo/content/generate', {
+      const res = await fetch('/api/seo/content/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contentPlanId: planId }),
       })
-      fetchPlans()
+      if (res.ok) {
+        fetchPlans()
+        toast('Entwurf generiert!', 'success')
+      } else {
+        toast('Entwurf konnte nicht generiert werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
     } finally { setGenerating(null) }
   }
 
   async function updateStatus(id: string, status: string) {
-    await fetch(`/api/seo/content/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    })
-    setPlans((prev) => prev.map((p) => p.id === id ? { ...p, status } : p))
+    try {
+      const res = await fetch(`/api/seo/content/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (res.ok) setPlans((prev) => prev.map((p) => p.id === id ? { ...p, status } : p))
+      else toast('Status konnte nicht geändert werden.', 'error')
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   async function deletePlan(id: string) {
-    await fetch(`/api/seo/content/${id}`, { method: 'DELETE' })
-    setPlans((prev) => prev.filter((p) => p.id !== id))
+    try {
+      const res = await fetch(`/api/seo/content/${id}`, { method: 'DELETE' })
+      if (res.ok) setPlans((prev) => prev.filter((p) => p.id !== id))
+      else toast('Plan konnte nicht gelöscht werden.', 'error')
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   async function fetchSuggestions() {
@@ -106,24 +137,35 @@ export default function ContentPage() {
       if (res.ok) {
         const data = await res.json()
         setSuggestions(data.suggestions || [])
+      } else {
+        toast('Vorschläge konnten nicht generiert werden.', 'error')
       }
-    } catch { /* ignore */ } finally { setLoadingSuggestions(false) }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    } finally { setLoadingSuggestions(false) }
   }
 
   async function adoptSuggestion(s: ContentSuggestion) {
-    const res = await fetch('/api/seo/content', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: s.title,
-        keyword: s.keyword,
-        contentType: s.contentType === 'landing' ? 'landing' : 'blog',
-        status: 'idea',
-      }),
-    })
-    if (res.ok) {
-      fetchPlans()
-      setSuggestions((prev) => prev.filter((x) => x.title !== s.title))
+    try {
+      const res = await fetch('/api/seo/content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: s.title,
+          keyword: s.keyword,
+          contentType: s.contentType === 'landing' ? 'landing' : 'blog',
+          status: 'idea',
+        }),
+      })
+      if (res.ok) {
+        fetchPlans()
+        setSuggestions((prev) => prev.filter((x) => x.title !== s.title))
+        toast('Vorschlag übernommen!', 'success')
+      } else {
+        toast('Vorschlag konnte nicht übernommen werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
