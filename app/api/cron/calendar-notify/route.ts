@@ -22,8 +22,8 @@ export async function GET(request: Request) {
       const success = await sendNotification({
         subject: `Erinnerung: ${event.title}`,
         body: event.description
-          ? `${event.description}\n\nDatum: ${event.date.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
-          : `Datum: ${event.date.toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+          ? `${event.description}\n\nDatum: ${event.date.toLocaleString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+          : `Datum: ${event.date.toLocaleString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
         module: 'system',
         actionUrl: '/dashboard/calendar',
       })

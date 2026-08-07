@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ChevronLeft, ChevronRight, CalendarDays, Loader2, Plus, Trash2, Bell, BellOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useToast } from '../components/toast'
 
 interface CalendarEvent {
   id: string
@@ -68,6 +69,7 @@ export default function CalendarPage() {
     color: 'sky',
     notify: '',
   })
+  const { toast } = useToast()
 
   const fetchEvents = useCallback(async () => {
     setLoading(true)
@@ -77,7 +79,9 @@ export default function CalendarPage() {
         const data = await res.json()
         setEvents(data.events)
       }
-    } catch { /* ignore */ } finally {
+    } catch {
+      toast('Events konnten nicht geladen werden.', 'error')
+    } finally {
       setLoading(false)
     }
   }, [year, month])
@@ -139,8 +143,13 @@ export default function CalendarPage() {
       if (res.ok) {
         setShowCreate(false)
         fetchEvents()
+        toast('Event erstellt!', 'success')
+      } else {
+        toast('Event konnte nicht erstellt werden.', 'error')
       }
-    } catch { /* ignore */ } finally {
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    } finally {
       setCreating(false)
     }
   }
@@ -150,7 +159,10 @@ export default function CalendarPage() {
     try {
       const res = await fetch(`/api/calendar/events?id=${id}`, { method: 'DELETE' })
       if (res.ok) fetchEvents()
-    } catch { /* ignore */ } finally {
+      else toast('Event konnte nicht gelöscht werden.', 'error')
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    } finally {
       setDeleting(null)
     }
   }

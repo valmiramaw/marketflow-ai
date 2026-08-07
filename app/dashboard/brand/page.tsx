@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Save, X, Plus, Info } from 'lucide-react'
+import { useToast } from '../components/toast'
 
 interface BrandProfile {
   brandName: string
@@ -60,6 +61,7 @@ export default function BrandPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [newValue, setNewValue] = useState('')
+  const { toast } = useToast()
 
   useEffect(() => { fetchBrand() }, [])
 
@@ -84,7 +86,9 @@ export default function BrandPage() {
           })
         }
       }
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch {
+      toast('Markenprofil konnte nicht geladen werden.', 'error')
+    } finally { setLoading(false) }
   }
 
   async function saveBrand() {
@@ -105,8 +109,15 @@ export default function BrandPage() {
           aiContext: brand.aiContext || null,
         }),
       })
-      if (res.ok) setSaved(true)
-    } catch { /* ignore */ } finally { setSaving(false) }
+      if (res.ok) {
+        setSaved(true)
+        toast('Markenprofil gespeichert!', 'success')
+      } else {
+        toast('Markenprofil konnte nicht gespeichert werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    } finally { setSaving(false) }
   }
 
   function addValue() {

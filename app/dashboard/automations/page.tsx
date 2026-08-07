@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Loader2, Trash2, Pencil, Workflow, Info, Zap } from 'lucide-react'
+import { useToast } from '../components/toast'
 
 interface Automation {
   id: string
@@ -81,6 +82,7 @@ export default function AutomationsPage() {
     actionType: 'create_email',
     newStatus: 'contacted',
   })
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchAutomations()
@@ -92,7 +94,7 @@ export default function AutomationsPage() {
       const data = await res.json()
       setAutomations(data)
     } catch {
-      // ignore
+      toast('Automationen konnten nicht geladen werden.', 'error')
     } finally {
       setLoading(false)
     }
@@ -119,47 +121,52 @@ export default function AutomationsPage() {
   async function handleSubmit() {
     try {
       const payload = buildPayload()
-      if (editingId) {
-        await fetch(`/api/automations/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
+      const res = editingId
+        ? await fetch(`/api/automations/${editingId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+        : await fetch('/api/automations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+      if (res.ok) {
+        setDialogOpen(false)
+        setEditingId(null)
+        resetForm()
+        fetchAutomations()
+        toast(editingId ? 'Automation gespeichert!' : 'Automation erstellt!', 'success')
       } else {
-        await fetch('/api/automations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
+        toast('Automation konnte nicht gespeichert werden.', 'error')
       }
-      setDialogOpen(false)
-      setEditingId(null)
-      resetForm()
-      fetchAutomations()
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
   async function toggleEnabled(automation: Automation) {
     try {
-      await fetch(`/api/automations/${automation.id}`, {
+      const res = await fetch(`/api/automations/${automation.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: !automation.enabled }),
       })
-      fetchAutomations()
+      if (res.ok) fetchAutomations()
+      else toast('Status konnte nicht geändert werden.', 'error')
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
   async function handleDelete(id: string) {
     try {
-      await fetch(`/api/automations/${id}`, { method: 'DELETE' })
-      fetchAutomations()
+      const res = await fetch(`/api/automations/${id}`, { method: 'DELETE' })
+      if (res.ok) fetchAutomations()
+      else toast('Automation konnte nicht gelöscht werden.', 'error')
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 

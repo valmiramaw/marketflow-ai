@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Loader2, Trash2, Pencil, Sparkles, Calendar, Share2 } from 'lucide-react'
+import { useToast } from '../components/toast'
 
 interface SocialPost {
   id: string
@@ -65,6 +66,7 @@ export default function SocialPage() {
   const [generating, setGenerating] = useState(false)
   const [activeTab, setActiveTab] = useState('all')
   const [form, setForm] = useState({ platform: 'instagram', content: '', hashtags: '', scheduledAt: '' })
+  const { toast } = useToast()
   const [genForm, setGenForm] = useState({ platform: 'instagram', productContentId: '', topic: '' })
 
   useEffect(() => {
@@ -75,10 +77,9 @@ export default function SocialPage() {
   async function fetchPosts() {
     try {
       const res = await fetch('/api/social')
-      const data = await res.json()
-      setPosts(data)
+      if (res.ok) setPosts(await res.json())
     } catch {
-      // ignore
+      toast('Posts konnten nicht geladen werden.', 'error')
     } finally {
       setLoading(false)
     }
@@ -87,25 +88,27 @@ export default function SocialPage() {
   async function fetchContents() {
     try {
       const res = await fetch('/api/content-studio')
-      const data = await res.json()
-      setContents(data)
-    } catch {
-      // ignore
-    }
+      if (res.ok) setContents(await res.json())
+    } catch { /* non-critical */ }
   }
 
   async function handleSubmit() {
     try {
-      await fetch('/api/social', {
+      const res = await fetch('/api/social', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      setDialogOpen(false)
-      setForm({ platform: 'instagram', content: '', hashtags: '', scheduledAt: '' })
-      fetchPosts()
+      if (res.ok) {
+        setDialogOpen(false)
+        setForm({ platform: 'instagram', content: '', hashtags: '', scheduledAt: '' })
+        fetchPosts()
+        toast('Post erstellt!', 'success')
+      } else {
+        toast('Post konnte nicht erstellt werden.', 'error')
+      }
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
@@ -135,7 +138,7 @@ export default function SocialPage() {
         fetchPosts()
       }
     } catch {
-      // ignore
+      toast('Post konnte nicht generiert werden.', 'error')
     } finally {
       setGenerating(false)
     }
@@ -143,23 +146,25 @@ export default function SocialPage() {
 
   async function handleDelete(id: string) {
     try {
-      await fetch(`/api/social/${id}`, { method: 'DELETE' })
-      fetchPosts()
+      const res = await fetch(`/api/social/${id}`, { method: 'DELETE' })
+      if (res.ok) fetchPosts()
+      else toast('Post konnte nicht gelöscht werden.', 'error')
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
   async function handleStatusChange(id: string, status: string) {
     try {
-      await fetch(`/api/social/${id}`, {
+      const res = await fetch(`/api/social/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, ...(status === 'published' ? { publishedAt: new Date().toISOString() } : {}) }),
       })
-      fetchPosts()
+      if (res.ok) fetchPosts()
+      else toast('Status konnte nicht geändert werden.', 'error')
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
@@ -387,7 +392,7 @@ export default function SocialPage() {
                       {post.scheduledAt && (
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {new Date(post.scheduledAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          {new Date(post.scheduledAt).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                       <span>Erstellt: {new Date(post.createdAt).toLocaleDateString('de-DE')}</span>

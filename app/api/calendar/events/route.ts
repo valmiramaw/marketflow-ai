@@ -26,8 +26,8 @@ export async function POST(request: Request) {
       await sendNotification({
         subject: `Erinnerung: ${event.title}`,
         body: event.description
-          ? `${event.description}\n\nDatum: ${new Date(event.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
-          : `Datum: ${new Date(event.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+          ? `${event.description}\n\nDatum: ${new Date(event.date).toLocaleString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+          : `Datum: ${new Date(event.date).toLocaleString('de-DE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
         module: 'system',
       })
       await prisma.manualCalendarEvent.update({

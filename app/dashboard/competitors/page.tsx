@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Plus, Loader2, Search, Trash2, Pencil, Sparkles, ExternalLink, ChevronDown, ChevronUp, Info } from 'lucide-react'
+import { useToast } from '../components/toast'
 
 interface Competitor {
   id: string
@@ -42,6 +43,7 @@ export default function CompetitorsPage() {
     return true
   })
   const [form, setForm] = useState({ name: '', website: '', industry: '', notes: '' })
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchCompetitors()
@@ -53,7 +55,7 @@ export default function CompetitorsPage() {
       const data = await res.json()
       setCompetitors(data)
     } catch {
-      // ignore
+      toast('Wettbewerber konnten nicht geladen werden.', 'error')
     } finally {
       setLoading(false)
     }
@@ -61,34 +63,38 @@ export default function CompetitorsPage() {
 
   async function handleSubmit() {
     try {
-      if (editingId) {
-        await fetch(`/api/competitors/${editingId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        })
+      const res = editingId
+        ? await fetch(`/api/competitors/${editingId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(form),
+          })
+        : await fetch('/api/competitors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(form),
+          })
+      if (res.ok) {
+        setDialogOpen(false)
+        setEditingId(null)
+        setForm({ name: '', website: '', industry: '', notes: '' })
+        fetchCompetitors()
+        toast(editingId ? 'Wettbewerber gespeichert!' : 'Wettbewerber hinzugefügt!', 'success')
       } else {
-        await fetch('/api/competitors', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        })
+        toast('Wettbewerber konnte nicht gespeichert werden.', 'error')
       }
-      setDialogOpen(false)
-      setEditingId(null)
-      setForm({ name: '', website: '', industry: '', notes: '' })
-      fetchCompetitors()
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
   async function handleDelete(id: string) {
     try {
-      await fetch(`/api/competitors/${id}`, { method: 'DELETE' })
-      fetchCompetitors()
+      const res = await fetch(`/api/competitors/${id}`, { method: 'DELETE' })
+      if (res.ok) fetchCompetitors()
+      else toast('Wettbewerber konnte nicht gelöscht werden.', 'error')
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
@@ -100,9 +106,12 @@ export default function CompetitorsPage() {
         const updated = await res.json()
         setCompetitors((prev) => prev.map((c) => (c.id === id ? updated : c)))
         setExpandedId(id)
+        toast('Analyse abgeschlossen!', 'success')
+      } else {
+        toast('Analyse konnte nicht durchgeführt werden.', 'error')
       }
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     } finally {
       setAnalyzingId(null)
     }

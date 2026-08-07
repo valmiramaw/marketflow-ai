@@ -270,7 +270,7 @@ export default function DashboardHome() {
                       <span className="text-sm">{sync.type} ({sync.provider})</span>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(sync.startedAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(sync.startedAt).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 ))}

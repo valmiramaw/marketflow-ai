@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Loader2, Sparkles, Eye, EyeOff, Trash2, PenTool } from 'lucide-react'
+import { useToast } from '../components/toast'
 
 interface ProductContent {
   id: string
@@ -55,55 +56,86 @@ export default function ContentStudioPage() {
   const [previewing, setPreviewing] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('all')
 
+  const { toast } = useToast()
+
   useEffect(() => { fetchContents() }, [])
 
   async function fetchContents() {
     try {
       const res = await fetch('/api/content-studio')
       if (res.ok) setContents(await res.json())
-    } catch { /* ignore */ } finally { setLoading(false) }
+    } catch {
+      toast('Inhalte konnten nicht geladen werden.', 'error')
+    } finally { setLoading(false) }
   }
 
   async function createContent(formData: FormData) {
-    const res = await fetch('/api/content-studio', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: formData.get('title'),
-        productName: formData.get('productName') || null,
-        contentType: formData.get('contentType') || 'blog_article',
-        language: formData.get('language') || 'de',
-        keyword: formData.get('keyword') || null,
-        prompt: formData.get('prompt') || null,
-      }),
-    })
-    if (res.ok) { setShowNew(false); fetchContents() }
+    try {
+      const res = await fetch('/api/content-studio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.get('title'),
+          productName: formData.get('productName') || null,
+          contentType: formData.get('contentType') || 'blog_article',
+          language: formData.get('language') || 'de',
+          keyword: formData.get('keyword') || null,
+          prompt: formData.get('prompt') || null,
+        }),
+      })
+      if (res.ok) {
+        setShowNew(false)
+        fetchContents()
+        toast('Content erstellt!', 'success')
+      } else {
+        toast('Content konnte nicht erstellt werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   async function generateContent(contentId: string) {
     setGenerating(contentId)
     try {
-      await fetch('/api/content-studio/generate', {
+      const res = await fetch('/api/content-studio/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contentId }),
       })
-      fetchContents()
+      if (res.ok) {
+        fetchContents()
+        toast('Inhalt generiert!', 'success')
+      } else {
+        toast('Inhalt konnte nicht generiert werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
     } finally { setGenerating(null) }
   }
 
   async function updateStatus(id: string, status: string) {
-    await fetch(`/api/content-studio/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    })
-    setContents((prev) => prev.map((c) => c.id === id ? { ...c, status } : c))
+    try {
+      const res = await fetch(`/api/content-studio/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (res.ok) setContents((prev) => prev.map((c) => c.id === id ? { ...c, status } : c))
+      else toast('Status konnte nicht geändert werden.', 'error')
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   async function deleteContent(id: string) {
-    await fetch(`/api/content-studio/${id}`, { method: 'DELETE' })
-    setContents((prev) => prev.filter((c) => c.id !== id))
+    try {
+      const res = await fetch(`/api/content-studio/${id}`, { method: 'DELETE' })
+      if (res.ok) setContents((prev) => prev.filter((c) => c.id !== id))
+      else toast('Content konnte nicht gelöscht werden.', 'error')
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   const filtered = activeTab === 'all' ? contents : contents.filter((c) => c.contentType === activeTab)

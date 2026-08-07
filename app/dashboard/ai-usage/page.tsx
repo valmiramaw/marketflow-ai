@@ -289,7 +289,7 @@ export default function AiUsagePage() {
                         )}
                       </td>
                       <td className="p-3 text-right text-xs text-muted-foreground">
-                        {new Date(r.createdAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        {new Date(r.createdAt).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                       </td>
                     </tr>
                   ))}

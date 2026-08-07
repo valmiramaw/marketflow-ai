@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Plus, Loader2, Trash2, Sparkles, Mail, Users, ChevronDown, ChevronUp } from 'lucide-react'
+import { useToast } from '../components/toast'
 
 interface EmailCampaign {
   id: string
@@ -52,6 +53,7 @@ export default function EmailPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [campaignForm, setCampaignForm] = useState({ name: '', subject: '', content: '' })
   const [contactForm, setContactForm] = useState({ email: '', name: '', tags: '' })
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchData()
@@ -67,7 +69,7 @@ export default function EmailPage() {
       setCampaigns(cData)
       setContacts(ctData)
     } catch {
-      // ignore
+      toast('Daten konnten nicht geladen werden.', 'error')
     } finally {
       setLoading(false)
     }
@@ -75,16 +77,21 @@ export default function EmailPage() {
 
   async function createCampaign() {
     try {
-      await fetch('/api/email/campaigns', {
+      const res = await fetch('/api/email/campaigns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(campaignForm),
       })
-      setCampaignDialogOpen(false)
-      setCampaignForm({ name: '', subject: '', content: '' })
-      fetchData()
+      if (res.ok) {
+        setCampaignDialogOpen(false)
+        setCampaignForm({ name: '', subject: '', content: '' })
+        fetchData()
+        toast('Kampagne erstellt!', 'success')
+      } else {
+        toast('Kampagne konnte nicht erstellt werden.', 'error')
+      }
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
@@ -94,34 +101,41 @@ export default function EmailPage() {
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean)
-      await fetch('/api/email/contacts', {
+      const res = await fetch('/api/email/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: contactForm.email, name: contactForm.name || null, tags }),
       })
-      setContactDialogOpen(false)
-      setContactForm({ email: '', name: '', tags: '' })
-      fetchData()
+      if (res.ok) {
+        setContactDialogOpen(false)
+        setContactForm({ email: '', name: '', tags: '' })
+        fetchData()
+        toast('Kontakt hinzugefügt!', 'success')
+      } else {
+        toast('Kontakt konnte nicht erstellt werden.', 'error')
+      }
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
   async function deleteCampaign(id: string) {
     try {
-      await fetch(`/api/email/campaigns/${id}`, { method: 'DELETE' })
-      fetchData()
+      const res = await fetch(`/api/email/campaigns/${id}`, { method: 'DELETE' })
+      if (res.ok) fetchData()
+      else toast('Kampagne konnte nicht gelöscht werden.', 'error')
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
   async function deleteContact(id: string) {
     try {
-      await fetch(`/api/email/contacts/${id}`, { method: 'DELETE' })
-      fetchData()
+      const res = await fetch(`/api/email/contacts/${id}`, { method: 'DELETE' })
+      if (res.ok) fetchData()
+      else toast('Kontakt konnte nicht gelöscht werden.', 'error')
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
@@ -142,9 +156,12 @@ export default function EmailPage() {
         })
         setExpandedId(campaign.id)
         fetchData()
+        toast('Inhalt generiert!', 'success')
+      } else {
+        toast('Inhalt konnte nicht generiert werden.', 'error')
       }
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     } finally {
       setGeneratingId(null)
     }
@@ -152,14 +169,15 @@ export default function EmailPage() {
 
   async function updateStatus(id: string, status: string) {
     try {
-      await fetch(`/api/email/campaigns/${id}`, {
+      const res = await fetch(`/api/email/campaigns/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, ...(status === 'sent' ? { sentAt: new Date().toISOString() } : {}) }),
       })
-      fetchData()
+      if (res.ok) fetchData()
+      else toast('Status konnte nicht geändert werden.', 'error')
     } catch {
-      // ignore
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
