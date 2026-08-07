@@ -90,6 +90,7 @@ export default function AiUsagePage() {
     fetch(`/api/ai/usage?days=${days}`)
       .then((r) => (r.ok ? r.json() : null))
       .then(setData)
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [days])
 

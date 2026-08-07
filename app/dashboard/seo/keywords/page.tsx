@@ -11,6 +11,7 @@ import { Plus, Loader2, TrendingUp, TrendingDown, Minus, Trash2, Search } from '
 import { InfoBox } from '../../components/info-box'
 import { cn } from '@/lib/utils'
 import { ResponsiveContainer, LineChart, Line } from 'recharts'
+import { useToast } from '../../components/toast'
 
 interface Keyword {
   id: string
@@ -25,6 +26,7 @@ interface Keyword {
 }
 
 export default function KeywordsPage() {
+  const { toast } = useToast()
   const [keywords, setKeywords] = useState<Keyword[]>([])
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
@@ -36,28 +38,48 @@ export default function KeywordsPage() {
     try {
       const res = await fetch('/api/seo/keywords')
       if (res.ok) setKeywords(await res.json())
-    } catch { /* ignore */ } finally {
+    } catch {
+      toast('Keywords konnten nicht geladen werden.', 'error')
+    } finally {
       setLoading(false)
     }
   }
 
   async function createKeyword(formData: FormData) {
-    const res = await fetch('/api/seo/keywords', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        keyword: formData.get('keyword'),
-        domain: formData.get('domain'),
-        searchVolume: formData.get('searchVolume') ? Number(formData.get('searchVolume')) : null,
-        difficulty: formData.get('difficulty') ? Number(formData.get('difficulty')) : null,
-      }),
-    })
-    if (res.ok) { setShowNew(false); fetchKeywords() }
+    try {
+      const res = await fetch('/api/seo/keywords', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keyword: formData.get('keyword'),
+          domain: formData.get('domain'),
+          searchVolume: formData.get('searchVolume') ? Number(formData.get('searchVolume')) : null,
+          difficulty: formData.get('difficulty') ? Number(formData.get('difficulty')) : null,
+        }),
+      })
+      if (res.ok) {
+        setShowNew(false)
+        fetchKeywords()
+        toast('Keyword hinzugefügt!', 'success')
+      } else {
+        toast('Keyword konnte nicht erstellt werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   async function deleteKeyword(id: string) {
-    await fetch(`/api/seo/keywords/${id}`, { method: 'DELETE' })
-    setKeywords((prev) => prev.filter((k) => k.id !== id))
+    try {
+      const res = await fetch(`/api/seo/keywords/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setKeywords((prev) => prev.filter((k) => k.id !== id))
+      } else {
+        toast('Keyword konnte nicht gelöscht werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   function getRankChange(kw: Keyword): number | null {

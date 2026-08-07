@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { KpiCard } from '../../components/kpi-card'
 import { TrendingUp, DollarSign, Target, Calendar, Loader2, Sparkles, AlertTriangle } from 'lucide-react'
 import { InfoBox } from '../../components/info-box'
+import { useToast } from '../../components/toast'
 import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 
 interface ForecastData {
@@ -43,6 +44,7 @@ const statusLabels: Record<string, string> = {
 }
 
 export default function ForecastingPage() {
+  const { toast } = useToast()
   const [data, setData] = useState<ForecastData | null>(null)
   const [forecast, setForecast] = useState<Forecast | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,14 +54,25 @@ export default function ForecastingPage() {
     fetch('/api/sales/forecasting')
       .then((r) => (r.ok ? r.json() : null))
       .then(setData)
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
   async function generateForecast() {
     setGenerating(true)
-    const res = await fetch('/api/sales/forecasting', { method: 'POST' })
-    if (res.ok) setForecast(await res.json())
-    setGenerating(false)
+    try {
+      const res = await fetch('/api/sales/forecasting', { method: 'POST' })
+      if (res.ok) {
+        setForecast(await res.json())
+        toast('Prognose erstellt!', 'success')
+      } else {
+        toast('Prognose konnte nicht generiert werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    } finally {
+      setGenerating(false)
+    }
   }
 
   if (loading) {

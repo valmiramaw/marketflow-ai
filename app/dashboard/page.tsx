@@ -67,6 +67,7 @@ export default function DashboardHome() {
     fetch('/api/dashboard')
       .then((r) => (r.ok ? r.json() : null))
       .then(setData)
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 

@@ -11,6 +11,7 @@ import {
   Save, Eye, EyeOff, CheckCircle, XCircle, Key, Globe, Zap, Loader2, Unlink, Cloud, Bell, Send,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useToast } from '../components/toast'
 
 export default function SettingsPage() {
   return (
@@ -21,6 +22,7 @@ export default function SettingsPage() {
 }
 
 function SettingsContent() {
+  const { toast } = useToast()
   const searchParams = useSearchParams()
   const [settings, setSettings] = useState({
     anthropicKey: '',
@@ -87,14 +89,16 @@ function SettingsContent() {
           awsRegion: data.awsRegion || '',
         })
       }
-    } catch { /* ignore */ }
+    } catch {
+      toast('Einstellungen konnten nicht geladen werden.', 'error')
+    }
   }
 
   async function fetchGoogleStatus() {
     try {
       const res = await fetch('/api/integrations/google')
       if (res.ok) setGoogleStatus(await res.json())
-    } catch { /* ignore */ }
+    } catch { /* non-critical */ }
   }
 
   async function saveSettings() {
@@ -105,8 +109,16 @@ function SettingsContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       })
-      if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 3000) }
-    } catch { /* ignore */ } finally { setSaving(false) }
+      if (res.ok) {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+        toast('Einstellungen gespeichert!', 'success')
+      } else {
+        toast('Einstellungen konnten nicht gespeichert werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler beim Speichern.', 'error')
+    } finally { setSaving(false) }
   }
 
   async function connectGoogle() {
@@ -132,7 +144,7 @@ function SettingsContent() {
     try {
       const res = await fetch('/api/notifications')
       if (res.ok) setEmailStatus(await res.json())
-    } catch { /* ignore */ }
+    } catch { /* non-critical */ }
   }
 
   async function sendTestEmail() {
@@ -156,7 +168,7 @@ function SettingsContent() {
     try {
       const res = await fetch('/api/notifications/preferences')
       if (res.ok) setPrefMatrix(await res.json())
-    } catch { /* ignore */ }
+    } catch { /* non-critical */ }
   }
 
   async function togglePreference(email: string, module: string, currentValue: boolean) {

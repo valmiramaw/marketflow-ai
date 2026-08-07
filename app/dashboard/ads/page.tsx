@@ -33,6 +33,7 @@ export default function AdsPage() {
     fetch('/api/ads/campaigns')
       .then((r) => (r.ok ? r.json() : []))
       .then(setCampaigns)
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 

@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Search, Sparkles } from 'lucide-react'
 import { InfoBox } from '../../components/info-box'
+import { useToast } from '../../components/toast'
 
 interface Lead {
   id: string
@@ -38,6 +39,7 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 
 export default function LeadsPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
@@ -51,11 +53,10 @@ export default function LeadsPage() {
     try {
       const res = await fetch('/api/sales/leads')
       if (res.ok) {
-        const data = await res.json()
-        setLeads(data)
+        setLeads(await res.json())
       }
     } catch {
-      // ignore
+      toast('Leads konnten nicht geladen werden.', 'error')
     } finally {
       setLoading(false)
     }
@@ -73,15 +74,21 @@ export default function LeadsPage() {
       value: formData.get('value') ? parseFloat(formData.get('value') as string) : null,
     }
 
-    const res = await fetch('/api/sales/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-
-    if (res.ok) {
-      setShowNew(false)
-      fetchLeads()
+    try {
+      const res = await fetch('/api/sales/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        setShowNew(false)
+        fetchLeads()
+        toast('Lead erstellt!', 'success')
+      } else {
+        toast('Lead konnte nicht erstellt werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler beim Erstellen.', 'error')
     }
   }
 

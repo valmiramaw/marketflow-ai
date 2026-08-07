@@ -11,6 +11,7 @@ import {
   Plus, Trash2, MessageSquare, PanelLeftClose, PanelLeft,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useToast } from '../components/toast'
 
 interface Perspective {
   provider: string
@@ -51,6 +52,7 @@ const PROVIDER_NAMES: Record<string, string> = {
 }
 
 export default function AiChatPage() {
+  const { toast } = useToast()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -78,7 +80,9 @@ export default function AiChatPage() {
     try {
       const res = await fetch('/api/ai/conversations')
       if (res.ok) setConversations(await res.json())
-    } catch { /* ignore */ } finally {
+    } catch {
+      toast('Chats konnten nicht geladen werden.', 'error')
+    } finally {
       setLoadingConversations(false)
     }
   }
@@ -109,7 +113,7 @@ export default function AiChatPage() {
         fetchConversations()
         return saved.id
       }
-    } catch { /* ignore */ }
+    } catch { /* auto-save failed silently */ }
     return convId
   }, [])
 
@@ -133,7 +137,9 @@ export default function AiChatPage() {
         setActiveConversationId(conv.id)
         setExpandedPerspectives({})
       }
-    } catch { /* ignore */ }
+    } catch {
+      toast('Chat konnte nicht geladen werden.', 'error')
+    }
   }
 
   async function deleteConversation(id: string, e: React.MouseEvent) {
@@ -149,7 +155,9 @@ export default function AiChatPage() {
         setActiveConversationId(null)
         setMessages([])
       }
-    } catch { /* ignore */ }
+    } catch {
+      toast('Chat konnte nicht gelöscht werden.', 'error')
+    }
   }
 
   function startNewChat() {

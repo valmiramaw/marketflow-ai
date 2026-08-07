@@ -46,7 +46,7 @@ export default function SeoPage() {
       setKeywords(k)
       setPlans(c)
       setAudits(a)
-    }).finally(() => setLoading(false))
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   if (loading) {

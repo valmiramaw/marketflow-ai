@@ -31,7 +31,7 @@ export default function AnalyticsPage() {
     ]).then(([s, g]) => {
       setSnapshots(s)
       setGoogleConnected(g.connected)
-    }).finally(() => setLoading(false))
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   if (loading) {

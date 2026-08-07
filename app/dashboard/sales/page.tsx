@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Loader2, Users, DollarSign, TrendingUp, Target, CheckCircle, Clock } from 'lucide-react'
 import { InfoBox } from '../components/info-box'
+import { useToast } from '../components/toast'
 
 interface Lead {
   id: string
@@ -29,6 +30,7 @@ interface FollowUp {
 
 export default function SalesPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [leads, setLeads] = useState<Lead[]>([])
   const [followUps, setFollowUps] = useState<FollowUp[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,7 +42,7 @@ export default function SalesPage() {
     ]).then(([l, f]) => {
       setLeads(l)
       setFollowUps(f)
-    }).finally(() => setLoading(false))
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [])
 
   const totalValue = leads.reduce((s, l) => s + (l.value || 0), 0)
@@ -69,12 +71,20 @@ export default function SalesPage() {
   }))
 
   async function completeFollowUp(id: string) {
-    await fetch('/api/sales/follow-ups', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, completed: true }),
-    })
-    setFollowUps((prev) => prev.filter((f) => f.id !== id))
+    try {
+      const res = await fetch('/api/sales/follow-ups', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, completed: true }),
+      })
+      if (res.ok) {
+        setFollowUps((prev) => prev.filter((f) => f.id !== id))
+      } else {
+        toast('Follow-up konnte nicht abgeschlossen werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    }
   }
 
   if (loading) {

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Sparkles, FileText, ChevronDown, ChevronUp } from 'lucide-react'
 import { InfoBox } from '../components/info-box'
+import { useToast } from '../components/toast'
 
 interface Report {
   id: string
@@ -16,6 +17,7 @@ interface Report {
 }
 
 export default function ReportsPage() {
+  const { toast } = useToast()
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -26,18 +28,31 @@ export default function ReportsPage() {
   }, [])
 
   async function fetchReports() {
-    const res = await fetch('/api/reports')
-    if (res.ok) setReports(await res.json())
-    setLoading(false)
+    try {
+      const res = await fetch('/api/reports')
+      if (res.ok) setReports(await res.json())
+    } catch {
+      toast('Berichte konnten nicht geladen werden.', 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function generateReport() {
     setGenerating(true)
-    const res = await fetch('/api/reports', { method: 'POST' })
-    if (res.ok) {
-      await fetchReports()
+    try {
+      const res = await fetch('/api/reports', { method: 'POST' })
+      if (res.ok) {
+        await fetchReports()
+        toast('Bericht wurde erstellt!', 'success')
+      } else {
+        toast('Bericht konnte nicht generiert werden.', 'error')
+      }
+    } catch {
+      toast('Verbindungsfehler.', 'error')
+    } finally {
+      setGenerating(false)
     }
-    setGenerating(false)
   }
 
   if (loading) {
