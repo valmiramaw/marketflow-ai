@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Sparkles, DollarSign, GripVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useToast } from '../../components/toast'
 
 interface Lead {
   id: string
@@ -23,11 +24,14 @@ const stages = [
   { id: 'contacted', label: 'Kontaktiert', color: 'border-t-yellow-500' },
   { id: 'qualified', label: 'Qualifiziert', color: 'border-t-orange-500' },
   { id: 'proposal', label: 'Proposal', color: 'border-t-purple-500' },
+  { id: 'negotiation', label: 'Verhandlung', color: 'border-t-indigo-500' },
   { id: 'won', label: 'Gewonnen', color: 'border-t-green-500' },
+  { id: 'lost', label: 'Verloren', color: 'border-t-red-500' },
 ]
 
 export default function PipelinePage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [draggedLead, setDraggedLead] = useState<string | null>(null)
@@ -41,21 +45,31 @@ export default function PipelinePage() {
     try {
       const res = await fetch('/api/sales/leads')
       if (res.ok) setLeads(await res.json())
-    } catch { /* ignore */ } finally {
+    } catch {
+      toast('Leads konnten nicht geladen werden.', 'error')
+    } finally {
       setLoading(false)
     }
   }
 
   async function moveToStage(leadId: string, newStatus: string) {
-    const res = await fetch(`/api/sales/leads/${leadId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    })
-    if (res.ok) {
-      setLeads((prev) =>
-        prev.map((l) => (l.id === leadId ? { ...l, status: newStatus } : l))
-      )
+    const prevLeads = leads
+    setLeads((prev) =>
+      prev.map((l) => (l.id === leadId ? { ...l, status: newStatus } : l))
+    )
+    try {
+      const res = await fetch(`/api/sales/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (!res.ok) {
+        setLeads(prevLeads)
+        toast('Status konnte nicht geändert werden.', 'error')
+      }
+    } catch {
+      setLeads(prevLeads)
+      toast('Verbindungsfehler.', 'error')
     }
   }
 
@@ -105,7 +119,7 @@ export default function PipelinePage() {
       </div>
 
       {/* Pipeline Stats */}
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
         {stages.map((stage) => {
           const count = getStageLeads(stage.id).length
           const value = getStageValue(stage.id)
