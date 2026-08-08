@@ -66,7 +66,17 @@ export function TopBar() {
           <Menu className="h-5 w-5" />
         </Button>
 
-        {/* Breadcrumbs */}
+        {/* Mobile: Seitentitel */}
+        {(() => {
+          const segments = pathname.split('/').filter(Boolean)
+          const lastSeg = segments[segments.length - 1]
+          const title = segmentLabels[lastSeg] || lastSeg
+          return segments.length > 0 ? (
+            <span className="sm:hidden text-sm font-medium truncate flex-1">{title}</span>
+          ) : null
+        })()}
+
+        {/* Desktop: Breadcrumbs */}
         <nav className="flex-1 hidden sm:flex items-center gap-1 text-sm text-muted-foreground overflow-hidden">
           {(() => {
             const segments = pathname.split('/').filter(Boolean)
