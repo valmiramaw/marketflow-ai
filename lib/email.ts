@@ -17,7 +17,7 @@ function getNotificationEmails(): string[] {
   return emails.split(',').map((e) => e.trim()).filter(Boolean)
 }
 
-const FROM_EMAIL = process.env.NOTIFICATION_FROM || 'MarketFlow AI <notifications@resend.dev>'
+const FROM_EMAIL = process.env.NOTIFICATION_FROM || 'MarketFlow AI <onboarding@resend.dev>'
 
 export interface NotificationPayload {
   subject: string
