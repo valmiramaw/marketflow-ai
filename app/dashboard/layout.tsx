@@ -2,6 +2,7 @@ import { Sidebar } from './components/sidebar'
 import { TopBar } from './components/topbar'
 import { ToastProvider } from './components/toast'
 import { CommandPalette } from './components/command-palette'
+import { ScrollToTop } from './components/scroll-to-top'
 
 export default function DashboardLayout({
   children,
@@ -18,6 +19,7 @@ export default function DashboardLayout({
         </div>
       </div>
       <CommandPalette />
+      <ScrollToTop />
     </ToastProvider>
   )
 }

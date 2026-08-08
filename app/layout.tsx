@@ -31,6 +31,13 @@ export const metadata: Metadata = {
     description: 'KI-gesteuerte Marketing & Sales Suite',
   },
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/icon.svg',
+  },
   other: {
     'theme-color': '#3b82f6',
   },
