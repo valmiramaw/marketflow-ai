@@ -14,8 +14,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MarketFlow AI",
-  description: "KI-gesteuerte Marketing & Sales Suite",
+  title: {
+    default: 'MarketFlow AI',
+    template: '%s | MarketFlow AI',
+  },
+  description: 'KI-gesteuerte Marketing & Sales Suite – Ads, SEO, Sales Intelligence, Multi-KI',
+  openGraph: {
+    title: 'MarketFlow AI',
+    description: 'KI-gesteuerte Marketing & Sales Suite – Ads, SEO, Sales Intelligence, Multi-KI',
+    type: 'website',
+    siteName: 'MarketFlow AI',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'MarketFlow AI',
+    description: 'KI-gesteuerte Marketing & Sales Suite',
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

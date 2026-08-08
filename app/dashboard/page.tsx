@@ -10,6 +10,7 @@ import {
   Megaphone, Search, Users, TrendingUp, DollarSign,
   MousePointerClick, UserPlus, Loader2, Sparkles, Target,
   Cpu, AlertCircle, CheckCircle, XCircle,
+  MessageSquare, CalendarDays, Share2, PenTool,
 } from 'lucide-react'
 import { InfoBox } from './components/info-box'
 
@@ -93,6 +94,42 @@ export default function DashboardHome() {
         </div>
         <Button variant="outline" onClick={() => router.push('/dashboard/reports')}>
           <Sparkles className="w-4 h-4 mr-2" />Wochenbericht
+        </Button>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Button
+          variant="outline"
+          className="h-auto py-3 flex flex-col items-center gap-1.5"
+          onClick={() => router.push('/dashboard/sales/leads')}
+        >
+          <UserPlus className="w-5 h-5 text-purple-500" />
+          <span className="text-xs">Neuer Lead</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="h-auto py-3 flex flex-col items-center gap-1.5"
+          onClick={() => router.push('/dashboard/ai-chat')}
+        >
+          <MessageSquare className="w-5 h-5 text-cyan-500" />
+          <span className="text-xs">KI-Chat</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="h-auto py-3 flex flex-col items-center gap-1.5"
+          onClick={() => router.push('/dashboard/social')}
+        >
+          <Share2 className="w-5 h-5 text-pink-500" />
+          <span className="text-xs">Social Post</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="h-auto py-3 flex flex-col items-center gap-1.5"
+          onClick={() => router.push('/dashboard/calendar')}
+        >
+          <CalendarDays className="w-5 h-5 text-sky-500" />
+          <span className="text-xs">Kalender</span>
         </Button>
       </div>
 
