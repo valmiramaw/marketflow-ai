@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
-import { Moon, Sun, Menu, X, ChevronRight } from 'lucide-react'
+import { Moon, Sun, Menu, X, ChevronRight, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Sidebar } from './sidebar'
@@ -88,6 +88,17 @@ export function TopBar() {
             })
           })()}
         </nav>
+
+        <button
+          onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+          className="hidden md:inline-flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted transition-colors"
+        >
+          <Search className="w-3.5 h-3.5" />
+          <span>Suchen...</span>
+          <kbd className="ml-2 inline-flex h-5 items-center gap-0.5 rounded border border-border bg-background px-1.5 text-[10px] font-medium">
+            Ctrl K
+          </kbd>
+        </button>
 
         <Button
           variant="ghost"
