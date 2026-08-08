@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { InfoBox } from './components/info-box'
 import { Skeleton } from '@/components/ui/skeleton'
+import { relativeTime } from '@/lib/relative-time'
 
 interface DashboardData {
   ads: {
@@ -347,8 +348,8 @@ export default function DashboardHome() {
                       )}
                       <span className="text-sm">{sync.type} ({sync.provider})</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(sync.startedAt).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                    <span className="text-xs text-muted-foreground" title={new Date(sync.startedAt).toLocaleString('de-DE')}>
+                      {relativeTime(sync.startedAt)}
                     </span>
                   </div>
                 ))}
