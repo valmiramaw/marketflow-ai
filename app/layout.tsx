@@ -30,6 +30,10 @@ export const metadata: Metadata = {
     title: 'MarketFlow AI',
     description: 'KI-gesteuerte Marketing & Sales Suite',
   },
+  manifest: '/manifest.json',
+  other: {
+    'theme-color': '#3b82f6',
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

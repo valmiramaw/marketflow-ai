@@ -251,10 +251,10 @@ export default function AiChatPage() {
             <div className="p-3 border-b flex items-center justify-between">
               <h3 className="text-sm font-medium">Chats</h3>
               <div className="flex gap-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={startNewChat}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={startNewChat} aria-label="Neuer Chat">
                   <Plus className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSidebarOpen(false)}>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSidebarOpen(false)} aria-label="Sidebar schließen">
                   <PanelLeftClose className="w-4 h-4" />
                 </Button>
               </div>
@@ -292,6 +292,7 @@ export default function AiChatPage() {
                     <button
                       onClick={(e) => deleteConversation(conv.id, e)}
                       className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-red-500"
+                      aria-label="Chat löschen"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -308,7 +309,7 @@ export default function AiChatPage() {
         <div className="mb-4 flex items-start justify-between">
           <div className="flex items-center gap-2">
             {!sidebarOpen && (
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)} aria-label="Sidebar öffnen">
                 <PanelLeft className="w-4 h-4" />
               </Button>
             )}

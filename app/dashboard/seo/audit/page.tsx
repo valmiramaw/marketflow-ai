@@ -10,6 +10,7 @@ import { Loader2, Search, AlertTriangle, AlertCircle, Info, CheckCircle } from '
 import { InfoBox } from '../../components/info-box'
 import { cn } from '@/lib/utils'
 import { useToast } from '../../components/toast'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface SeoAudit {
   id: string
@@ -68,7 +69,18 @@ export default function AuditPage() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-36 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-12 rounded-lg" />
+        {Array.from({ length: 2 }).map((_, i) => (
+          <Skeleton key={i} className="h-40 rounded-lg" />
+        ))}
+      </div>
+    )
   }
 
   return (
