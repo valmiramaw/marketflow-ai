@@ -1,11 +1,13 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 // GET - Cross-Modul Dashboard-Daten
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { searchParams } = request.nextUrl
+  const days = Math.min(Math.max(Number(searchParams.get('days')) || 30, 1), 365)
   const now = new Date()
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const thirtyDaysAgo = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+  const sevenDaysAgo = new Date(now.getTime() - Math.min(days, 7) * 24 * 60 * 60 * 1000)
 
   // Parallel alle Daten laden
   const [

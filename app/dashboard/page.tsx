@@ -60,18 +60,26 @@ interface DashboardData {
   latestReport: { id: string; weekStart: string; createdAt: string } | null
 }
 
+const periodOptions = [
+  { value: '7', label: '7 Tage' },
+  { value: '30', label: '30 Tage' },
+  { value: '90', label: '90 Tage' },
+]
+
 export default function DashboardHome() {
   const router = useRouter()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [period, setPeriod] = useState('30')
 
   useEffect(() => {
-    fetch('/api/dashboard')
+    setLoading(true)
+    fetch(`/api/dashboard?days=${period}`)
       .then((r) => (r.ok ? r.json() : null))
       .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [period])
 
   if (loading) {
     return (
@@ -114,9 +122,20 @@ export default function DashboardHome() {
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Alle KPIs auf einen Blick</p>
         </div>
-        <Button variant="outline" onClick={() => router.push('/dashboard/reports')}>
-          <Sparkles className="w-4 h-4 mr-2" />Wochenbericht
-        </Button>
+        <div className="flex items-center gap-2">
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="h-10 rounded-md border border-border bg-background px-3 py-2 text-sm"
+          >
+            {periodOptions.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <Button variant="outline" onClick={() => router.push('/dashboard/reports')}>
+            <Sparkles className="w-4 h-4 mr-2" />Wochenbericht
+          </Button>
+        </div>
       </div>
 
       {/* Quick Actions */}
@@ -170,7 +189,7 @@ export default function DashboardHome() {
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
-          title="Ad Spend (30 Tage)"
+          title={`Ad Spend (${period} Tage)`}
           value={`${ads.totalSpend.toLocaleString('de-DE', { minimumFractionDigits: 2 })}€`}
           icon={<DollarSign className="w-5 h-5" />}
         />
