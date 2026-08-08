@@ -182,7 +182,7 @@ export default function ContentStudioPage() {
             </div>
             <div>
               <Label htmlFor="title">Titel *</Label>
-              <Input id="title" name="title" required placeholder="z.B. Matcha Latte Supreme - Produktbeschreibung" />
+              <Input id="title" name="title" required autoFocus placeholder="z.B. Matcha Latte Supreme - Produktbeschreibung" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

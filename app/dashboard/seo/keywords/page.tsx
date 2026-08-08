@@ -127,7 +127,7 @@ export default function KeywordsPage() {
             <form action={createKeyword} className="space-y-4">
               <div>
                 <Label htmlFor="keyword">Keyword *</Label>
-                <Input id="keyword" name="keyword" required placeholder="z.B. marketing automation" />
+                <Input id="keyword" name="keyword" required autoFocus placeholder="z.B. marketing automation" />
               </div>
               <div>
                 <Label htmlFor="domain">Domain *</Label>

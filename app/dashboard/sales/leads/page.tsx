@@ -117,7 +117,7 @@ export default function LeadsPage() {
             <form action={createLead} className="space-y-4">
               <div>
                 <Label htmlFor="company">Firma *</Label>
-                <Input id="company" name="company" required />
+                <Input id="company" name="company" required autoFocus />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
