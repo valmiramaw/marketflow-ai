@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { Plus, Loader2, Trash2, Sparkles, Mail, Users, ChevronDown, ChevronUp } from 'lucide-react'
 import { useToast } from '../components/toast'
+import { ConfirmDialog } from '../components/confirm-dialog'
 
 interface EmailCampaign {
   id: string
@@ -54,6 +55,8 @@ export default function EmailPage() {
   const [campaignForm, setCampaignForm] = useState({ name: '', subject: '', content: '' })
   const [contactForm, setContactForm] = useState({ email: '', name: '', tags: '' })
   const { toast } = useToast()
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; type: 'campaign' | 'contact' } | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -120,22 +123,30 @@ export default function EmailPage() {
   }
 
   async function deleteCampaign(id: string) {
+    setDeleteLoading(true)
     try {
       const res = await fetch(`/api/email/campaigns/${id}`, { method: 'DELETE' })
       if (res.ok) fetchData()
       else toast('Kampagne konnte nicht gelöscht werden.', 'error')
     } catch {
       toast('Verbindungsfehler.', 'error')
+    } finally {
+      setDeleteLoading(false)
+      setDeleteConfirm(null)
     }
   }
 
   async function deleteContact(id: string) {
+    setDeleteLoading(true)
     try {
       const res = await fetch(`/api/email/contacts/${id}`, { method: 'DELETE' })
       if (res.ok) fetchData()
       else toast('Kontakt konnte nicht gelöscht werden.', 'error')
     } catch {
       toast('Verbindungsfehler.', 'error')
+    } finally {
+      setDeleteLoading(false)
+      setDeleteConfirm(null)
     }
   }
 
@@ -291,7 +302,7 @@ export default function EmailPage() {
                           Senden
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => deleteCampaign(campaign.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm({ id: campaign.id, type: 'campaign' })} aria-label="Kampagne löschen">
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     </div>
@@ -395,7 +406,7 @@ export default function EmailPage() {
                             {new Date(contact.createdAt).toLocaleDateString('de-DE')}
                           </td>
                           <td className="p-3">
-                            <Button variant="ghost" size="icon" onClick={() => deleteContact(contact.id)}>
+                            <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm({ id: contact.id, type: 'contact' })} aria-label="Kontakt löschen">
                               <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>
                           </td>
@@ -409,6 +420,18 @@ export default function EmailPage() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        loading={deleteLoading}
+        title={deleteConfirm?.type === 'contact' ? 'Kontakt löschen?' : 'Kampagne löschen?'}
+        onConfirm={() => {
+          if (!deleteConfirm) return
+          if (deleteConfirm.type === 'campaign') deleteCampaign(deleteConfirm.id)
+          else deleteContact(deleteConfirm.id)
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   )
 }

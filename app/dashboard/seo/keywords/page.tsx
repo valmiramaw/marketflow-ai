@@ -12,6 +12,7 @@ import { InfoBox } from '../../components/info-box'
 import { cn } from '@/lib/utils'
 import { ResponsiveContainer, LineChart, Line } from 'recharts'
 import { useToast } from '../../components/toast'
+import { ConfirmDialog } from '../../components/confirm-dialog'
 
 interface Keyword {
   id: string
@@ -27,6 +28,8 @@ interface Keyword {
 
 export default function KeywordsPage() {
   const { toast } = useToast()
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const [keywords, setKeywords] = useState<Keyword[]>([])
   const [loading, setLoading] = useState(true)
   const [showNew, setShowNew] = useState(false)
@@ -70,6 +73,7 @@ export default function KeywordsPage() {
   }
 
   async function deleteKeyword(id: string) {
+    setDeleteLoading(true)
     try {
       const res = await fetch(`/api/seo/keywords/${id}`, { method: 'DELETE' })
       if (res.ok) {
@@ -79,6 +83,9 @@ export default function KeywordsPage() {
       }
     } catch {
       toast('Verbindungsfehler.', 'error')
+    } finally {
+      setDeleteLoading(false)
+      setDeleteConfirm(null)
     }
   }
 
@@ -241,7 +248,7 @@ export default function KeywordsPage() {
                           )}
                         </td>
                         <td className="p-4 text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deleteKeyword(kw.id)}>
+                          <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(kw.id)} aria-label="Keyword löschen">
                             <Trash2 className="w-4 h-4 text-muted-foreground" />
                           </Button>
                         </td>
@@ -254,6 +261,14 @@ export default function KeywordsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        loading={deleteLoading}
+        title="Keyword löschen?"
+        onConfirm={() => deleteConfirm && deleteKeyword(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   )
 }

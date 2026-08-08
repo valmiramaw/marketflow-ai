@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Plus, Loader2, Trash2, Pencil, Sparkles, Calendar, Share2 } from 'lucide-react'
 import { useToast } from '../components/toast'
+import { ConfirmDialog } from '../components/confirm-dialog'
 
 interface SocialPost {
   id: string
@@ -67,6 +68,8 @@ export default function SocialPage() {
   const [activeTab, setActiveTab] = useState('all')
   const [form, setForm] = useState({ platform: 'instagram', content: '', hashtags: '', scheduledAt: '' })
   const { toast } = useToast()
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const [genForm, setGenForm] = useState({ platform: 'instagram', productContentId: '', topic: '' })
 
   useEffect(() => {
@@ -145,12 +148,16 @@ export default function SocialPage() {
   }
 
   async function handleDelete(id: string) {
+    setDeleteLoading(true)
     try {
       const res = await fetch(`/api/social/${id}`, { method: 'DELETE' })
       if (res.ok) fetchPosts()
       else toast('Post konnte nicht gelöscht werden.', 'error')
     } catch {
       toast('Verbindungsfehler.', 'error')
+    } finally {
+      setDeleteLoading(false)
+      setDeleteConfirm(null)
     }
   }
 
@@ -405,7 +412,7 @@ export default function SocialPage() {
                         Veröffentlichen
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(post.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(post.id)} aria-label="Post löschen">
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
@@ -415,6 +422,14 @@ export default function SocialPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        loading={deleteLoading}
+        title="Post löschen?"
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   )
 }

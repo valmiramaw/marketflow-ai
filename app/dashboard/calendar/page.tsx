@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ChevronLeft, ChevronRight, CalendarDays, Loader2, Plus, Trash2, Bell, BellOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from '../components/toast'
+import { ConfirmDialog } from '../components/confirm-dialog'
 
 interface CalendarEvent {
   id: string
@@ -61,6 +62,7 @@ export default function CalendarPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -164,6 +166,7 @@ export default function CalendarPage() {
       toast('Verbindungsfehler.', 'error')
     } finally {
       setDeleting(null)
+      setDeleteConfirm(null)
     }
   }
 
@@ -216,13 +219,13 @@ export default function CalendarPage() {
         <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <Button variant="ghost" size="icon" onClick={prevMonth}>
+              <Button variant="ghost" size="icon" onClick={prevMonth} aria-label="Vorheriger Monat">
                 <ChevronLeft className="w-5 h-5" />
               </Button>
               <CardTitle className="text-xl">
                 {MONTH_NAMES[month - 1]} {year}
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={nextMonth}>
+              <Button variant="ghost" size="icon" onClick={nextMonth} aria-label="Nächster Monat">
                 <ChevronRight className="w-5 h-5" />
               </Button>
             </div>
@@ -360,7 +363,8 @@ export default function CalendarPage() {
                               size="icon"
                               className="w-6 h-6"
                               disabled={deleting === event.id}
-                              onClick={() => deleteEvent(event.id)}
+                              onClick={() => setDeleteConfirm(event.id)}
+                              aria-label="Event löschen"
                             >
                               {deleting === event.id
                                 ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -385,6 +389,14 @@ export default function CalendarPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        loading={!!deleting}
+        title="Event löschen?"
+        onConfirm={() => deleteConfirm && deleteEvent(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
 
       {/* Event erstellen Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>

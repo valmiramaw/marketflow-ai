@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Plus, Loader2, Sparkles, Eye, EyeOff, Trash2, PenTool } from 'lucide-react'
 import { useToast } from '../components/toast'
+import { ConfirmDialog } from '../components/confirm-dialog'
 
 interface ProductContent {
   id: string
@@ -57,6 +58,8 @@ export default function ContentStudioPage() {
   const [activeTab, setActiveTab] = useState('all')
 
   const { toast } = useToast()
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => { fetchContents() }, [])
 
@@ -129,12 +132,16 @@ export default function ContentStudioPage() {
   }
 
   async function deleteContent(id: string) {
+    setDeleteLoading(true)
     try {
       const res = await fetch(`/api/content-studio/${id}`, { method: 'DELETE' })
       if (res.ok) setContents((prev) => prev.filter((c) => c.id !== id))
       else toast('Content konnte nicht gelöscht werden.', 'error')
     } catch {
       toast('Verbindungsfehler.', 'error')
+    } finally {
+      setDeleteLoading(false)
+      setDeleteConfirm(null)
     }
   }
 
@@ -269,6 +276,7 @@ export default function ContentStudioPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setPreviewing(previewing === content.id ? null : content.id)}
+                          aria-label={previewing === content.id ? 'Vorschau ausblenden' : 'Vorschau anzeigen'}
                         >
                           {previewing === content.id ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </Button>
@@ -282,7 +290,7 @@ export default function ContentStudioPage() {
                         <option value="reviewed">Geprüft</option>
                         <option value="final">Final</option>
                       </select>
-                      <Button variant="ghost" size="icon" onClick={() => deleteContent(content.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(content.id)} aria-label="Content löschen">
                         <Trash2 className="w-4 h-4 text-muted-foreground" />
                       </Button>
                     </div>
@@ -300,6 +308,14 @@ export default function ContentStudioPage() {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        loading={deleteLoading}
+        title="Content löschen?"
+        onConfirm={() => deleteConfirm && deleteContent(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   )
 }

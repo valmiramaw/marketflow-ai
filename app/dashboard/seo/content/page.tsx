@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Plus, Loader2, Sparkles, PenLine, Trash2, Eye, Lightbulb } from 'lucide-react'
 import { InfoBox } from '../../components/info-box'
 import { useToast } from '../../components/toast'
+import { ConfirmDialog } from '../../components/confirm-dialog'
 
 interface ContentSuggestion {
   title: string
@@ -48,6 +49,8 @@ export default function ContentPage() {
   const [suggestions, setSuggestions] = useState<ContentSuggestion[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const { toast } = useToast()
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => { fetchPlans() }, [])
 
@@ -119,12 +122,16 @@ export default function ContentPage() {
   }
 
   async function deletePlan(id: string) {
+    setDeleteLoading(true)
     try {
       const res = await fetch(`/api/seo/content/${id}`, { method: 'DELETE' })
       if (res.ok) setPlans((prev) => prev.filter((p) => p.id !== id))
       else toast('Plan konnte nicht gelöscht werden.', 'error')
     } catch {
       toast('Verbindungsfehler.', 'error')
+    } finally {
+      setDeleteLoading(false)
+      setDeleteConfirm(null)
     }
   }
 
@@ -327,6 +334,7 @@ export default function ContentPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setPreview(preview === plan.id ? null : plan.id)}
+                          aria-label="Entwurf-Vorschau"
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -341,7 +349,7 @@ export default function ContentPage() {
                         <option value="writing">In Arbeit</option>
                         <option value="published">Veröffentlicht</option>
                       </select>
-                      <Button variant="ghost" size="icon" onClick={() => deletePlan(plan.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(plan.id)} aria-label="Content-Plan löschen">
                         <Trash2 className="w-4 h-4 text-muted-foreground" />
                       </Button>
                     </div>
@@ -364,6 +372,14 @@ export default function ContentPage() {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        loading={deleteLoading}
+        title="Content-Plan löschen?"
+        onConfirm={() => deleteConfirm && deletePlan(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   )
 }

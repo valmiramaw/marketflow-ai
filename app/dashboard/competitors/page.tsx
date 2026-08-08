@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { Plus, Loader2, Search, Trash2, Pencil, Sparkles, ExternalLink, ChevronDown, ChevronUp, Info } from 'lucide-react'
 import { useToast } from '../components/toast'
+import { ConfirmDialog } from '../components/confirm-dialog'
 
 interface Competitor {
   id: string
@@ -44,6 +45,8 @@ export default function CompetitorsPage() {
   })
   const [form, setForm] = useState({ name: '', website: '', industry: '', notes: '' })
   const { toast } = useToast()
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     fetchCompetitors()
@@ -89,12 +92,16 @@ export default function CompetitorsPage() {
   }
 
   async function handleDelete(id: string) {
+    setDeleteLoading(true)
     try {
       const res = await fetch(`/api/competitors/${id}`, { method: 'DELETE' })
       if (res.ok) fetchCompetitors()
       else toast('Wettbewerber konnte nicht gelöscht werden.', 'error')
     } catch {
       toast('Verbindungsfehler.', 'error')
+    } finally {
+      setDeleteLoading(false)
+      setDeleteConfirm(null)
     }
   }
 
@@ -254,10 +261,10 @@ export default function CompetitorsPage() {
                       )}
                       KI-Analyse
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(c)} aria-label="Wettbewerber bearbeiten">
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(c.id)} aria-label="Wettbewerber löschen">
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
@@ -283,6 +290,14 @@ export default function CompetitorsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        loading={deleteLoading}
+        title="Wettbewerber löschen?"
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   )
 }

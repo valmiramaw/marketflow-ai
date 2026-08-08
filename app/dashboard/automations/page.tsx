@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Plus, Loader2, Trash2, Pencil, Workflow, Info, Zap } from 'lucide-react'
 import { useToast } from '../components/toast'
+import { ConfirmDialog } from '../components/confirm-dialog'
 
 interface Automation {
   id: string
@@ -83,6 +84,8 @@ export default function AutomationsPage() {
     newStatus: 'contacted',
   })
   const { toast } = useToast()
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     fetchAutomations()
@@ -161,12 +164,16 @@ export default function AutomationsPage() {
   }
 
   async function handleDelete(id: string) {
+    setDeleteLoading(true)
     try {
       const res = await fetch(`/api/automations/${id}`, { method: 'DELETE' })
       if (res.ok) fetchAutomations()
       else toast('Automation konnte nicht gelöscht werden.', 'error')
     } catch {
       toast('Verbindungsfehler.', 'error')
+    } finally {
+      setDeleteLoading(false)
+      setDeleteConfirm(null)
     }
   }
 
@@ -373,10 +380,10 @@ export default function AutomationsPage() {
                     >
                       {automation.enabled ? 'Deaktivieren' : 'Aktivieren'}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(automation)}>
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(automation)} aria-label="Automation bearbeiten">
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(automation.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(automation.id)} aria-label="Automation löschen">
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </div>
@@ -386,6 +393,14 @@ export default function AutomationsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        loading={deleteLoading}
+        title="Automation löschen?"
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   )
 }
