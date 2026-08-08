@@ -7,7 +7,9 @@ const globalForRedis = globalThis as unknown as {
 function createRedisClient() {
   const url = process.env.REDIS_URL
   if (!url) {
-    console.warn('REDIS_URL not set — Redis features disabled')
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('REDIS_URL not set — Redis features disabled')
+    }
     return null
   }
   return new Redis(url, {

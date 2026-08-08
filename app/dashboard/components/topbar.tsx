@@ -3,9 +3,40 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
-import { Moon, Sun, Menu, X } from 'lucide-react'
+import { Moon, Sun, Menu, X, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 import { Sidebar } from './sidebar'
+
+const segmentLabels: Record<string, string> = {
+  dashboard: 'Dashboard',
+  ads: 'Performance Ads',
+  campaigns: 'Kampagnen',
+  budgets: 'Budgets',
+  'ab-tests': 'A/B Tests',
+  creatives: 'Werbemittel',
+  seo: 'SEO & Analytics',
+  keywords: 'Keywords',
+  content: 'Content',
+  audit: 'SEO-Audit',
+  analytics: 'Analytics',
+  brand: 'Marke & Branding',
+  'content-studio': 'Content-Studio',
+  competitors: 'Wettbewerber',
+  social: 'Social Media',
+  email: 'E-Mail',
+  sales: 'Sales',
+  leads: 'Leads',
+  pipeline: 'Pipeline',
+  proposals: 'Proposals',
+  forecasting: 'Forecasting',
+  automations: 'Automatisierungen',
+  'ai-chat': 'KI-Chat',
+  'ai-usage': 'KI-Nutzung',
+  reports: 'Berichte',
+  calendar: 'Kalender',
+  settings: 'Einstellungen',
+}
 
 export function TopBar() {
   const { theme, setTheme } = useTheme()
@@ -35,7 +66,28 @@ export function TopBar() {
           <Menu className="h-5 w-5" />
         </Button>
 
-        <div className="flex-1" />
+        {/* Breadcrumbs */}
+        <nav className="flex-1 hidden sm:flex items-center gap-1 text-sm text-muted-foreground overflow-hidden">
+          {(() => {
+            const segments = pathname.split('/').filter(Boolean)
+            if (segments.length <= 1) return null
+            return segments.map((seg, i) => {
+              const href = '/' + segments.slice(0, i + 1).join('/')
+              const label = segmentLabels[seg] || seg
+              const isLast = i === segments.length - 1
+              return (
+                <span key={href} className="flex items-center gap-1 min-w-0">
+                  {i > 0 && <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground/50" />}
+                  {isLast ? (
+                    <span className="font-medium text-foreground truncate">{label}</span>
+                  ) : (
+                    <Link href={href} className="hover:text-foreground transition-colors truncate">{label}</Link>
+                  )}
+                </span>
+              )
+            })
+          })()}
+        </nav>
 
         <Button
           variant="ghost"
